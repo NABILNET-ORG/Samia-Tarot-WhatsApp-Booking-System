@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
-import { ConversationHandler } from '@/lib/workflow/conversation-handler'
+import { WorkflowEngine } from '@/lib/workflow/workflow-engine'
 import { supabaseHelpers } from '@/lib/supabase/client'
 
 /**
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`💬 Message from ${from}: "${messageBody}"`)
 
-    // Handle the conversation
-    await ConversationHandler.handleMessage(from, messageBody)
+    // Handle the conversation with new WorkflowEngine
+    await WorkflowEngine.processMessage(from, messageBody)
 
     // Mark webhook as processed
     const processingTime = Date.now() - startTime
