@@ -2,7 +2,28 @@
  * 🔮 Home Page - Samia Tarot
  */
 
+'use client'
+
+import { useEffect, useState } from 'react'
+
 export default function HomePage() {
+  const [whatsappNumber, setWhatsappNumber] = useState('+9613620860')
+  const [provider, setProvider] = useState('meta')
+
+  useEffect(() => {
+    // Get WhatsApp number based on provider
+    const providerFromEnv = process.env.NEXT_PUBLIC_WHATSAPP_PROVIDER || 'meta'
+    setProvider(providerFromEnv)
+
+    // For Meta: use business number from env
+    // For Twilio: use sandbox number
+    if (providerFromEnv === 'twilio') {
+      setWhatsappNumber('+14155238886') // Twilio sandbox
+    } else {
+      // Meta business number
+      setWhatsappNumber(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+9613620860')
+    }
+  }, [])
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-2xl mx-auto text-center">
@@ -29,12 +50,16 @@ export default function HomePage() {
 
           <div className="space-y-4">
             <a
-              href="https://wa.me/9613620860"
+              href={`https://wa.me/${whatsappNumber.replace('+', '')}`}
               target="_blank"
               className="btn btn-primary w-full inline-block"
             >
               📱 Book via WhatsApp
             </a>
+
+            <div className="text-xs text-gray-400">
+              {provider === 'twilio' ? 'Twilio Sandbox' : 'Samia Tarot Official'}
+            </div>
 
             <div className="text-sm text-gray-500">
               Available in Arabic & English
