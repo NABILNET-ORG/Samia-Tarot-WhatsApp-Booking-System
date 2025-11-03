@@ -390,8 +390,8 @@ export const ServiceHelpers = {
       .eq('service_id', serviceId)
       .gte('created_at', startDate.toISOString())
 
-    const views = events?.filter(e => e.event_type === 'service_viewed').length || 0
-    const selections = events?.filter(e => e.event_type === 'service_selected').length || 0
+    const views = events?.filter((e: any) => e.event_type === 'service_viewed').length || 0
+    const selections = events?.filter((e: any) => e.event_type === 'service_selected').length || 0
 
     // Get bookings
     const { data: bookings } = await supabaseAdmin
@@ -402,7 +402,7 @@ export const ServiceHelpers = {
       .eq('payment_status', 'completed')
 
     const bookingCount = bookings?.length || 0
-    const revenue = bookings?.reduce((sum, b) => sum + Number(b.amount), 0) || 0
+    const revenue = bookings?.reduce((sum: number, b: any) => sum + Number(b.amount), 0) || 0
 
     const conversionRate = views > 0 ? (bookingCount / views) * 100 : 0
 

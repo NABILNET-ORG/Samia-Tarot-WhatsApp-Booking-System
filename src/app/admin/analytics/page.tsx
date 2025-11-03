@@ -86,8 +86,8 @@ export default function AnalyticsPage() {
       // Customer stats
       const { data: customers } = await supabase.from('customers').select('vip_status, total_bookings')
 
-      const vipCount = customers?.filter((c) => c.vip_status).length || 0
-      const activeCount = customers?.filter((c) => c.total_bookings > 0).length || 0
+      const vipCount = customers?.filter((c: any) => c.vip_status).length || 0
+      const activeCount = customers?.filter((c: any) => c.total_bookings > 0).length || 0
 
       setCustomerStats({
         total: customers?.length || 0,
