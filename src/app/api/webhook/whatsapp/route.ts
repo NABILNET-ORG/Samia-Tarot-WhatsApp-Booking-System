@@ -67,6 +67,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, skipped: true }, { status: 200 })
     }
 
+    // CRITICAL: Prevent infinite loop by ignoring messages FROM our own number
+    const ourNumbers = [
+      process.env.TWILIO_WHATSAPP_NUMBER,
+      process.env.META_WHATSAPP_NUMBER,
+      '+15556320392', // Fallback
+    ].filter(Boolean)
+
+    if (ourNumbers.some(num => from.includes(num!.replace(/\D/g, '')))) {
+      console.log('⏭️  Message from our own number - ignoring to prevent loop')
+      return NextResponse.json({ received: true, skipped: true }, { status: 200 })
+    }
+
     console.log(`💬 Message from ${from}: "${messageBody}"`)
 
     // Handle the conversation with new WorkflowEngine
