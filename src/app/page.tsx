@@ -7,22 +7,30 @@
 import { useEffect, useState } from 'react'
 
 export default function HomePage() {
-  const [whatsappNumber, setWhatsappNumber] = useState('+9613620860')
+  const [whatsappNumber, setWhatsappNumber] = useState('+15556320392')
   const [provider, setProvider] = useState('meta')
 
   useEffect(() => {
-    // Get WhatsApp number based on provider
-    const providerFromEnv = process.env.NEXT_PUBLIC_WHATSAPP_PROVIDER || 'meta'
-    setProvider(providerFromEnv)
+    // Fetch current provider from database
+    fetch('/api/admin/settings')
+      .then(res => res.json())
+      .then(data => {
+        const currentProvider = data.settings?.whatsapp_provider?.value || 'meta'
+        setProvider(currentProvider)
 
-    // For Meta: use business number from env
-    // For Twilio: use sandbox number
-    if (providerFromEnv === 'twilio') {
-      setWhatsappNumber('+14155238886') // Twilio sandbox
-    } else {
-      // Meta business number
-      setWhatsappNumber(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+9613620860')
-    }
+        // Set WhatsApp number based on provider
+        if (currentProvider === 'twilio') {
+          setWhatsappNumber('+14155238886') // Twilio sandbox
+        } else {
+          // Meta business number
+          setWhatsappNumber('+15556320392') // Your Meta number
+        }
+      })
+      .catch(() => {
+        // Fallback to Meta
+        setProvider('meta')
+        setWhatsappNumber('+15556320392')
+      })
   }, [])
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
