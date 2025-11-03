@@ -10,6 +10,7 @@ import { supabaseHelpers } from '@/lib/supabase/client'
 
 /**
  * GET - Webhook verification (Meta)
+ * Always verify Meta webhooks regardless of current provider setting
  */
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -17,18 +18,15 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token')
   const challenge = searchParams.get('hub.challenge')
 
-  const provider = getWhatsAppProvider()
+  // Meta webhook verification
+  const verifyToken = process.env.META_WHATSAPP_VERIFY_TOKEN
 
-  if (provider.getName() === 'meta') {
-    const MetaProvider = provider as any
-    const result = MetaProvider.verifyWebhookGet?.(mode, token, challenge)
-
-    if (result) {
-      console.log('✅ Webhook verified successfully')
-      return new NextResponse(result, { status: 200 })
-    }
+  if (mode === 'subscribe' && token === verifyToken && challenge) {
+    console.log('✅ Meta webhook verified successfully')
+    return new NextResponse(challenge, { status: 200 })
   }
 
+  console.log('❌ Webhook verification failed:', { mode, tokenMatch: token === verifyToken, hasChallenge: !!challenge })
   return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 }
 
