@@ -7,6 +7,7 @@ import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
 import { supabaseAdmin, supabaseHelpers } from '@/lib/supabase/client'
 import { ServiceHelpers } from '@/lib/supabase/services'
 import { AIEngine } from './ai-engine'
+import { PaymentHandler } from './payment-handler'
 
 export class WorkflowEngine {
   /**
@@ -251,8 +252,9 @@ export class WorkflowEngine {
         body: message,
       })
 
-      // Create Stripe checkout (will be implemented)
+      // Create Stripe checkout
       console.log('   🔗 Creating Stripe checkout...')
+      await PaymentHandler.createStripeCheckout(customer, service, language)
     }
 
     // Track payment initiated

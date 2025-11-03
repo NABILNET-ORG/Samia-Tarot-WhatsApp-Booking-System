@@ -1,0 +1,200 @@
+/**
+ * 💳 Stripe Webhook Handler
+ * Processes payment confirmations and completes bookings
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { headers } from 'next/headers'
+import { StripeHelpers } from '@/lib/stripe/client'
+import { supabaseAdmin, supabaseHelpers } from '@/lib/supabase/client'
+import { ServiceHelpers } from '@/lib/supabase/services'
+import { PaymentHandler } from '@/lib/workflow/payment-handler'
+import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.text()
+    const signature = headers().get('stripe-signature')!
+
+    // Verify webhook signature
+    const event = StripeHelpers.verifyWebhookSignature(body, signature)
+
+    console.log(`💳 Stripe webhook: ${event.type}`)
+
+    // Handle different event types
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutCompleted(event.data.object as any)
+        break
+
+      case 'payment_intent.succeeded':
+        console.log('✅ Payment intent succeeded')
+        break
+
+      case 'payment_intent.payment_failed':
+        await handlePaymentFailed(event.data.object as any)
+        break
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`)
+    }
+
+    return NextResponse.json({ received: true })
+  } catch (error: any) {
+    console.error('❌ Stripe webhook error:', error)
+    return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+}
+
+/**
+ * Handle successful checkout
+ */
+async function handleCheckoutCompleted(session: any) {
+  try {
+    console.log(`🎉 Checkout completed: ${session.id}`)
+
+    const metadata = session.metadata
+    const customerId = metadata.customer_id
+    const serviceId = parseInt(metadata.service_id)
+    const language = metadata.language || 'en'
+
+    // Get customer
+    const { data: customer } = await supabaseAdmin
+      .from('customers')
+      .select('*')
+      .eq('id', customerId)
+      .single()
+
+    if (!customer) {
+      throw new Error('Customer not found')
+    }
+
+    // Get service
+    const service = await ServiceHelpers.getServiceById(serviceId)
+    if (!service) {
+      throw new Error('Service not found')
+    }
+
+    // Update booking to completed
+    const { data: booking, error: updateError } = await supabaseAdmin
+      .from('bookings')
+      .update({
+        payment_status: 'completed',
+        status: 'confirmed',
+        stripe_payment_id: session.payment_intent,
+        booking_completed_at: new Date().toISOString(),
+        scheduled_date: PaymentHandler.calculateDeliveryDate(service).toISOString(),
+      })
+      .eq('stripe_checkout_session_id', session.id)
+      .select()
+      .single()
+
+    if (updateError) {
+      throw new Error(`Failed to update booking: ${updateError.message}`)
+    }
+
+    console.log(`✅ Booking updated: ${booking.id}`)
+
+    // Track payment completed
+    await supabaseHelpers.trackEvent('payment_completed', {
+      customer_id: customerId,
+      phone: customer.phone,
+      service_id: serviceId,
+      amount: service.price,
+    })
+
+    // Send confirmation to customer
+    await sendBookingConfirmation(customer, booking, service, language)
+
+    // Notify admin
+    await notifyAdminNewBooking(customer, booking, service)
+
+    console.log('🎉 Payment flow completed successfully!')
+  } catch (error: any) {
+    console.error('Error handling checkout completed:', error)
+    throw error
+  }
+}
+
+/**
+ * Send booking confirmation to customer
+ */
+async function sendBookingConfirmation(customer: any, booking: any, service: any, language: string) {
+  const provider = getWhatsAppProvider()
+  const deliveryDate = new Date(booking.scheduled_date)
+
+  const message =
+    language === 'ar'
+      ? `✅ تم تأكيد حجزك!\n\n` +
+        `🔮 الخدمة: ${service.name_arabic}\n` +
+        `💰 المبلغ: $${service.price}\n` +
+        `📅 التسليم: ${deliveryDate.toLocaleDateString('ar-EG')} في الساعة 10:00 مساءً\n` +
+        `📲 رقم الحجز: ${booking.id.substring(0, 8)}\n\n` +
+        `سيتم إرسال قراءتك عبر واتساب في الموعد المحدد.\n\n` +
+        `شكراً لثقتك بنا! 🙏✨`
+      : `✅ Booking Confirmed!\n\n` +
+        `🔮 Service: ${service.name_english}\n` +
+        `💰 Amount: $${service.price}\n` +
+        `📅 Delivery: ${deliveryDate.toLocaleDateString('en-US')} at 10:00 PM\n` +
+        `📲 Booking ID: ${booking.id.substring(0, 8)}\n\n` +
+        `Your reading will be sent via WhatsApp at the scheduled time.\n\n` +
+        `Thank you for your trust! 🙏✨`
+
+  await provider.sendMessage({
+    to: customer.phone,
+    body: message,
+  })
+
+  console.log(`✅ Confirmation sent to ${customer.phone}`)
+}
+
+/**
+ * Notify admin of new booking
+ */
+async function notifyAdminNewBooking(customer: any, booking: any, service: any) {
+  const provider = getWhatsAppProvider()
+  const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+9613620860'
+
+  const message = `🎉 حجز جديد! / New Booking!\n\n` +
+    `👤 العميل / Customer: ${customer.name_english || customer.name_arabic || 'Unknown'}\n` +
+    `📱 الهاتف / Phone: ${customer.phone}\n` +
+    `📧 البريد / Email: ${customer.email || 'N/A'}\n` +
+    `🔮 الخدمة / Service: ${service.name_english}\n` +
+    `💰 المبلغ / Amount: $${service.price}\n` +
+    `📅 التسليم / Delivery: ${new Date(booking.scheduled_date).toLocaleString()}\n` +
+    `💳 معرف الدفع / Payment ID: ${booking.stripe_payment_id || 'Pending'}\n` +
+    `📲 رقم الحجز / Booking: ${booking.id.substring(0, 8)}`
+
+  await provider.sendMessage({
+    to: adminPhone,
+    body: message,
+  })
+
+  // Save notification to database
+  await supabaseHelpers.notifyAdmin(
+    'new_booking',
+    'New Booking',
+    message,
+    {
+      priority: 'medium',
+      relatedBookingId: booking.id,
+      relatedCustomerId: customer.id,
+      metadata: {
+        service_id: service.id,
+        amount: service.price,
+      },
+    }
+  )
+
+  console.log(`✅ Admin notified`)
+}
+
+/**
+ * Handle payment failure
+ */
+async function handlePaymentFailed(paymentIntent: any) {
+  console.log(`❌ Payment failed: ${paymentIntent.id}`)
+
+  // You could notify customer or admin here
+  // For now, just log it
+}
