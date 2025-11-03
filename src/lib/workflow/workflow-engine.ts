@@ -241,20 +241,27 @@ export class WorkflowEngine {
         body: message,
       })
     } else {
-      // Stripe only
-      const message =
-        language === 'ar'
-          ? `💳 الدفع ببطاقة الائتمان\n\n🔮 الخدمة: ${service.name_arabic}\n💰 المبلغ: $${service.price}\n\n🔗 رابط الدفع سيتم إرساله خلال ثوانٍ...`
-          : `💳 Credit Card Payment\n\n🔮 Service: ${service.name_english}\n💰 Amount: $${service.price}\n\n🔗 Payment link will be sent in a moment...`
-
-      await provider.sendMessage({
-        to: customer.phone,
-        body: message,
-      })
-
-      // Create Stripe checkout
+      // Create Stripe checkout (do this FIRST, before sending message)
       console.log('   🔗 Creating Stripe checkout...')
-      await PaymentHandler.createStripeCheckout(customer, service, language)
+      try {
+        await PaymentHandler.createStripeCheckout(customer, service, language)
+        console.log('   ✅ Stripe checkout created and sent!')
+      } catch (error: any) {
+        console.error('   ❌ Stripe checkout failed:', error.message)
+
+        // Send error message to customer
+        const errorMessage =
+          language === 'ar'
+            ? `عذراً، حدث خطأ في إنشاء رابط الدفع. الرجاء المحاولة مرة أخرى أو التواصل مع الدعم.`
+            : `Sorry, there was an error creating the payment link. Please try again or contact support.`
+
+        await provider.sendMessage({
+          to: customer.phone,
+          body: errorMessage,
+        })
+
+        throw error
+      }
     }
 
     // Track payment initiated
