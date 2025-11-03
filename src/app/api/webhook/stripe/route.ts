@@ -10,6 +10,7 @@ import { supabaseAdmin, supabaseHelpers } from '@/lib/supabase/client'
 import { ServiceHelpers } from '@/lib/supabase/services'
 import { PaymentHandler } from '@/lib/workflow/payment-handler'
 import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
+import { CalendarHelpers } from '@/lib/google/calendar'
 
 export async function POST(request: NextRequest) {
   try {
@@ -95,6 +96,46 @@ async function handleCheckoutCompleted(session: any) {
 
     console.log(`✅ Booking updated: ${booking.id}`)
 
+    // Create calendar event for call services
+    if (service.service_type === 'call' && booking.metadata?.selectedSlot) {
+      try {
+        console.log('📅 Creating Google Calendar event...')
+        const slot = booking.metadata.selectedSlot
+        const calendarEvent = await CalendarHelpers.createEvent({
+          summary: `${service.name_english} - ${customer.name_english || 'Customer'}`,
+          description: `Booking ID: ${booking.id}\nCustomer: ${customer.name_english || customer.name_arabic}\nPhone: ${customer.phone}\nEmail: ${customer.email || 'N/A'}`,
+          startTime: new Date(slot.startTime),
+          endTime: new Date(slot.endTime),
+          attendeeEmail: customer.email,
+          attendeeName: customer.name_english || customer.name_arabic,
+        })
+
+        // Update booking with calendar info
+        await supabaseAdmin
+          .from('bookings')
+          .update({
+            metadata: {
+              ...booking.metadata,
+              calendarEventId: calendarEvent.eventId,
+              meetLink: calendarEvent.meetLink,
+            },
+          })
+          .eq('id', booking.id)
+
+        console.log(`✅ Calendar event created: ${calendarEvent.eventId}`)
+        console.log(`✅ Meet link: ${calendarEvent.meetLink}`)
+
+        // Update booking variable to include meet link for confirmation message
+        booking.metadata = {
+          ...booking.metadata,
+          meetLink: calendarEvent.meetLink,
+        }
+      } catch (calendarError: any) {
+        console.error('❌ Failed to create calendar event:', calendarError.message)
+        // Continue with booking confirmation even if calendar fails
+      }
+    }
+
     // Track payment completed
     await supabaseHelpers.trackEvent('payment_completed', {
       customer_id: customerId,
@@ -122,23 +163,49 @@ async function handleCheckoutCompleted(session: any) {
 async function sendBookingConfirmation(customer: any, booking: any, service: any, language: string) {
   const provider = getWhatsAppProvider()
   const deliveryDate = new Date(booking.scheduled_date)
+  const meetLink = booking.metadata?.meetLink
 
-  const message =
-    language === 'ar'
-      ? `✅ تم تأكيد حجزك!\n\n` +
-        `🔮 الخدمة: ${service.name_arabic}\n` +
-        `💰 المبلغ: $${service.price}\n` +
-        `📅 التسليم: ${deliveryDate.toLocaleDateString('ar-EG')} في الساعة 10:00 مساءً\n` +
-        `📲 رقم الحجز: ${booking.id.substring(0, 8)}\n\n` +
-        `سيتم إرسال قراءتك عبر واتساب في الموعد المحدد.\n\n` +
-        `شكراً لثقتك بنا! 🙏✨`
-      : `✅ Booking Confirmed!\n\n` +
-        `🔮 Service: ${service.name_english}\n` +
-        `💰 Amount: $${service.price}\n` +
-        `📅 Delivery: ${deliveryDate.toLocaleDateString('en-US')} at 10:00 PM\n` +
-        `📲 Booking ID: ${booking.id.substring(0, 8)}\n\n` +
-        `Your reading will be sent via WhatsApp at the scheduled time.\n\n` +
-        `Thank you for your trust! 🙏✨`
+  let message = ''
+
+  if (service.service_type === 'call' && meetLink) {
+    // Call service with Meet link
+    message =
+      language === 'ar'
+        ? `✅ تم تأكيد حجز المكالمة!\n\n` +
+          `🔮 الخدمة: ${service.name_arabic}\n` +
+          `💰 المبلغ: $${service.price}\n` +
+          `📅 الموعد: ${deliveryDate.toLocaleDateString('ar-EG')} ${deliveryDate.toLocaleTimeString('ar-EG', { hour: 'numeric', minute: '2-digit' })}\n` +
+          `📲 رقم الحجز: ${booking.id.substring(0, 8)}\n\n` +
+          `🔗 رابط المكالمة (Google Meet):\n${meetLink}\n\n` +
+          `سيتم إرسال تذكير قبل الموعد بساعة.\n\n` +
+          `شكراً لثقتك بنا! 🙏✨`
+        : `✅ Call Booking Confirmed!\n\n` +
+          `🔮 Service: ${service.name_english}\n` +
+          `💰 Amount: $${service.price}\n` +
+          `📅 Time: ${deliveryDate.toLocaleDateString('en-US')} ${deliveryDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}\n` +
+          `📲 Booking ID: ${booking.id.substring(0, 8)}\n\n` +
+          `🔗 Meeting Link (Google Meet):\n${meetLink}\n\n` +
+          `You'll receive a reminder 1 hour before the call.\n\n` +
+          `Thank you for your trust! 🙏✨`
+  } else {
+    // Reading service
+    message =
+      language === 'ar'
+        ? `✅ تم تأكيد حجزك!\n\n` +
+          `🔮 الخدمة: ${service.name_arabic}\n` +
+          `💰 المبلغ: $${service.price}\n` +
+          `📅 التسليم: ${deliveryDate.toLocaleDateString('ar-EG')} في الساعة 10:00 مساءً\n` +
+          `📲 رقم الحجز: ${booking.id.substring(0, 8)}\n\n` +
+          `سيتم إرسال قراءتك عبر واتساب في الموعد المحدد.\n\n` +
+          `شكراً لثقتك بنا! 🙏✨`
+        : `✅ Booking Confirmed!\n\n` +
+          `🔮 Service: ${service.name_english}\n` +
+          `💰 Amount: $${service.price}\n` +
+          `📅 Delivery: ${deliveryDate.toLocaleDateString('en-US')} at 10:00 PM\n` +
+          `📲 Booking ID: ${booking.id.substring(0, 8)}\n\n` +
+          `Your reading will be sent via WhatsApp at the scheduled time.\n\n` +
+          `Thank you for your trust! 🙏✨`
+  }
 
   await provider.sendMessage({
     to: customer.phone,

@@ -54,11 +54,18 @@ export async function POST(request: NextRequest) {
     const incomingMessage = provider.parseIncomingMessage(body)
 
     if (!incomingMessage) {
-      console.log('⚠️  Invalid message format')
-      return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
+      // Not a text message - could be status update, read receipt, delivery report, etc.
+      console.log('⏭️  Non-message webhook (status update, read receipt, etc.) - skipping')
+      return NextResponse.json({ received: true, skipped: true }, { status: 200 })
     }
 
     const { from, body: messageBody } = incomingMessage
+
+    // Validate message has actual content
+    if (!messageBody || messageBody.trim().length === 0) {
+      console.log('⏭️  Empty message body - skipping')
+      return NextResponse.json({ received: true, skipped: true }, { status: 200 })
+    }
 
     console.log(`💬 Message from ${from}: "${messageBody}"`)
 

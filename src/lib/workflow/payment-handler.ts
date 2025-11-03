@@ -15,7 +15,8 @@ export class PaymentHandler {
   static async createStripeCheckout(
     customer: any,
     service: Service,
-    language: 'ar' | 'en'
+    language: 'ar' | 'en',
+    selectedSlot?: any
   ): Promise<void> {
     try {
       const provider = getWhatsAppProvider()
@@ -32,25 +33,33 @@ export class PaymentHandler {
       })
 
       // Create pending booking in database
+      const bookingData: any = {
+        customer_id: customer.id,
+        phone: customer.phone,
+        service_id: service.id,
+        service_name: service.name_english,
+        service_type: service.service_type,
+        service_tier: service.service_tier,
+        service_duration: service.duration_minutes,
+        amount: service.price,
+        currency: 'USD',
+        payment_method: 'stripe',
+        payment_status: 'pending',
+        stripe_checkout_session_id: checkout.sessionId,
+        status: 'pending',
+        language,
+        booking_started_at: new Date().toISOString(),
+      }
+
+      // Add selected slot for call services
+      if (selectedSlot) {
+        bookingData.scheduled_date = new Date(selectedSlot.startTime).toISOString()
+        bookingData.metadata = { selectedSlot }
+      }
+
       const { data: booking, error } = await supabaseAdmin
         .from('bookings')
-        .insert({
-          customer_id: customer.id,
-          phone: customer.phone,
-          service_id: service.id,
-          service_name: service.name_english,
-          service_type: service.service_type,
-          service_tier: service.service_tier,
-          service_duration: service.duration_minutes,
-          amount: service.price,
-          currency: 'USD',
-          payment_method: 'stripe',
-          payment_status: 'pending',
-          stripe_checkout_session_id: checkout.sessionId,
-          status: 'pending',
-          language,
-          booking_started_at: new Date().toISOString(),
-        })
+        .insert(bookingData)
         .select()
         .single()
 

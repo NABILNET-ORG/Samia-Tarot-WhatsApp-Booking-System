@@ -164,6 +164,7 @@ ${services
 - SERVICE_SELECTED: Customer chose service, proceeding
 - ASK_NAME: Request customer's name (only if not in database!)
 - ASK_EMAIL: Request email (only if not in database!)
+- SELECT_TIME_SLOT: For call services, customer chooses time slot
 - PAYMENT: Process payment
 - SUPPORT_REQUEST: Connect to human
 
@@ -185,9 +186,11 @@ ${services
 2. If customer typed number 1-${services.length}, they're selecting service → set state to SERVICE_SELECTED and include selectedServiceId
 3. If you already have name, set needsName: false
 4. If you already have email, set needsEmail: false
-5. Be conversational and helpful
-6. For questions about services, provide detailed answers then ask if they want to book
-7. Guide smoothly through the booking process
+5. For CALL services: After collecting name/email, transition to SELECT_TIME_SLOT state (time slots will be shown automatically)
+6. When in SELECT_TIME_SLOT state and customer types a number, store it in metadata.selectedSlotNumber and transition to PAYMENT
+7. Be conversational and helpful
+8. For questions about services, provide detailed answers then ask if they want to book
+9. Guide smoothly through the booking process
 
 **EXAMPLES:**
 

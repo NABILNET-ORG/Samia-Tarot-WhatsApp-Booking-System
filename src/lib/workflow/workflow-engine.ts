@@ -8,6 +8,7 @@ import { supabaseAdmin, supabaseHelpers } from '@/lib/supabase/client'
 import { ServiceHelpers } from '@/lib/supabase/services'
 import { AIEngine } from './ai-engine'
 import { PaymentHandler } from './payment-handler'
+import { CalendarHelpers, TimeSlot } from '@/lib/google/calendar'
 
 export class WorkflowEngine {
   /**
@@ -105,6 +106,21 @@ export class WorkflowEngine {
         console.log(`   📧 Email saved: ${aiDecision.detectedEmail}`)
       }
 
+      // Store selected slot if provided
+      if (aiDecision.metadata?.selectedSlotNumber) {
+        const slotNumber = parseInt(aiDecision.metadata.selectedSlotNumber)
+        const availableSlots = conversation.context_data?.availableSlots || []
+        const selectedSlot = CalendarHelpers.getSlotByNumber(availableSlots, slotNumber)
+
+        if (selectedSlot) {
+          updates.context_data = {
+            ...conversation.context_data,
+            selectedSlot,
+          }
+          console.log(`   🕐 Time slot selected: ${selectedSlot.displayText}`)
+        }
+      }
+
       await supabaseHelpers.upsertConversation(phone, updates)
       console.log('   ✅ Conversation updated')
 
@@ -178,6 +194,12 @@ export class WorkflowEngine {
         }
         break
 
+      case 'SELECT_TIME_SLOT':
+        // Show available time slots for call services
+        console.log('   📅 Fetching available time slots...')
+        await this.showTimeSlots(customer, conversation, aiDecision)
+        break
+
       case 'PAYMENT':
         // Initiate payment flow
         console.log('   💳 Initiating payment...')
@@ -206,6 +228,71 @@ export class WorkflowEngine {
         })
         console.log('   ✅ Admin notified')
         break
+    }
+  }
+
+  /**
+   * Show available time slots for call services
+   */
+  private static async showTimeSlots(
+    customer: any,
+    conversation: any,
+    aiDecision: any
+  ): Promise<void> {
+    const provider = getWhatsAppProvider()
+
+    try {
+      // Get service to check duration
+      const service = await ServiceHelpers.getServiceById(conversation.selected_service)
+      if (!service || service.service_type !== 'call') {
+        console.log('   ⚠️  Not a call service, skipping slots')
+        return
+      }
+
+      // Fetch available slots
+      const duration = service.duration_minutes || 30
+      const slots = await CalendarHelpers.getAvailableSlots(duration)
+
+      if (slots.length === 0) {
+        // No slots available
+        const message =
+          aiDecision.language === 'ar'
+            ? 'عذراً، لا توجد مواعيد متاحة حالياً. الرجاء التواصل مع الدعم.'
+            : 'Sorry, no available time slots at the moment. Please contact support.'
+
+        await provider.sendMessage({
+          to: customer.phone,
+          body: message,
+        })
+        return
+      }
+
+      // Store slots in conversation context_data for later retrieval
+      await supabaseHelpers.upsertConversation(customer.phone, {
+        context_data: { availableSlots: slots },
+      })
+
+      // Format and send slots message
+      const slotsMessage = CalendarHelpers.formatSlotsForWhatsApp(slots, aiDecision.language)
+      await provider.sendMessage({
+        to: customer.phone,
+        body: slotsMessage,
+      })
+
+      console.log(`   ✅ Sent ${slots.length} time slots`)
+    } catch (error: any) {
+      console.error('   ❌ Error fetching time slots:', error)
+
+      // Send error message
+      const errorMessage =
+        aiDecision.language === 'ar'
+          ? 'عذراً، حدث خطأ في جلب الأوقات المتاحة. الرجاء المحاولة مرة أخرى.'
+          : 'Sorry, there was an error fetching available times. Please try again.'
+
+      await provider.sendMessage({
+        to: customer.phone,
+        body: errorMessage,
+      })
     }
   }
 
@@ -244,7 +331,9 @@ export class WorkflowEngine {
       // Create Stripe checkout (do this FIRST, before sending message)
       console.log('   🔗 Creating Stripe checkout...')
       try {
-        await PaymentHandler.createStripeCheckout(customer, service, language)
+        // Get selected slot if it's a call service
+        const selectedSlot = conversation.context_data?.selectedSlot
+        await PaymentHandler.createStripeCheckout(customer, service, language, selectedSlot)
         console.log('   ✅ Stripe checkout created and sent!')
       } catch (error: any) {
         console.error('   ❌ Stripe checkout failed:', error.message)
