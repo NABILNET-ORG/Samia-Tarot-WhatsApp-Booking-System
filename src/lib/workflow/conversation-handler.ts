@@ -9,7 +9,7 @@ import { ServiceHelpers, Service } from '@/lib/supabase/services'
 import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-build',
 })
 
 export type ConversationState =
