@@ -1,0 +1,101 @@
+/**
+ * 🔮 COMPLETE WhatsApp Webhook Handler
+ * Full workflow with Supabase, AI, and all integrations
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
+import { ConversationHandler } from '@/lib/workflow/conversation-handler'
+import { supabaseHelpers } from '@/lib/supabase/client'
+
+/**
+ * GET - Webhook verification (Meta)
+ */
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const mode = searchParams.get('hub.mode')
+  const token = searchParams.get('hub.verify_token')
+  const challenge = searchParams.get('hub.challenge')
+
+  const provider = getWhatsAppProvider()
+
+  if (provider.getName() === 'meta') {
+    const MetaProvider = provider as any
+    const result = MetaProvider.verifyWebhookGet?.(mode, token, challenge)
+
+    if (result) {
+      console.log('✅ Webhook verified successfully')
+      return new NextResponse(result, { status: 200 })
+    }
+  }
+
+  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+}
+
+/**
+ * POST - Handle incoming WhatsApp messages
+ */
+export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+
+  try {
+    const body = await request.json()
+    const provider = getWhatsAppProvider()
+
+    console.log(`📱 Webhook received from ${provider.getName()}`)
+
+    // Log webhook
+    await supabaseHelpers.logWebhook({
+      provider: provider.getName(),
+      event_type: 'incoming_message',
+      payload: body,
+      processed: false,
+    })
+
+    // Parse message
+    const incomingMessage = provider.parseIncomingMessage(body)
+
+    if (!incomingMessage) {
+      console.log('⚠️  Invalid message format')
+      return NextResponse.json({ error: 'Invalid message format' }, { status: 400 })
+    }
+
+    const { from, body: messageBody } = incomingMessage
+
+    console.log(`💬 Message from ${from}: "${messageBody}"`)
+
+    // Handle the conversation
+    await ConversationHandler.handleMessage(from, messageBody)
+
+    // Mark webhook as processed
+    const processingTime = Date.now() - startTime
+    await supabaseHelpers.logWebhook({
+      provider: provider.getName(),
+      event_type: 'processed',
+      payload: { success: true, from },
+      processed: true,
+      processing_time_ms: processingTime,
+    })
+
+    console.log(`✅ Message processed in ${processingTime}ms`)
+
+    return NextResponse.json({
+      success: true,
+      processing_time_ms: processingTime,
+    })
+  } catch (error: any) {
+    console.error('❌ Webhook error:', error)
+
+    // Log error
+    await supabaseHelpers.logWebhook({
+      provider: getWhatsAppProvider().getName(),
+      event_type: 'error',
+      payload: { error: error.message },
+      processed: false,
+      error: error.stack,
+      processing_time_ms: Date.now() - startTime,
+    })
+
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}

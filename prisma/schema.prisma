@@ -1,0 +1,137 @@
+// Prisma Schema for Samia Tarot Booking System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// System Configuration
+model SystemConfig {
+  id                String   @id @default(cuid())
+  whatsappProvider  String   @default("meta") // "meta" or "twilio"
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// Services offered
+model Service {
+  id          Int       @id @default(autoincrement())
+  nameAr      String
+  nameEn      String
+  price       Float
+  type        String    // "reading" or "call"
+  tier        String    // "standard", "premium", "golden", "video"
+  duration    Int?      // in minutes (for calls)
+  description String?
+  active      Boolean   @default(true)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([active, type])
+}
+
+// Customer information
+model Customer {
+  id                  String         @id @default(cuid())
+  phoneNumber         String         @unique
+  nameAr              String?
+  nameEn              String?
+  email               String?
+  language            String         @default("ar") // "ar" or "en"
+  countryCode         String?
+  googleContactId     String?
+  bookings            Booking[]
+  conversations       Conversation[]
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  @@index([phoneNumber])
+  @@index([email])
+}
+
+// Conversation history
+model Conversation {
+  id             String             @id @default(cuid())
+  customerId     String
+  customer       Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  state          String             @default("GREETING") // GREETING, GENERAL_QUESTION, SHOW_SERVICES, etc.
+  language       String             @default("ar")
+  active         Boolean            @default(true)
+  messages       ConversationMessage[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@index([customerId, active])
+  @@index([state])
+}
+
+// Individual messages in a conversation
+model ConversationMessage {
+  id              String       @id @default(cuid())
+  conversationId  String
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            String       // "user" or "assistant"
+  content         String       @db.Text
+  metadata        Json?        // Store additional context
+  createdAt       DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+// Bookings
+model Booking {
+  id                String    @id @default(cuid())
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id])
+  serviceId         Int
+  service           Service   @relation(fields: [serviceId], references: [id])
+  status            String    @default("pending") // pending, confirmed, completed, cancelled
+  paymentStatus     String    @default("unpaid") // unpaid, paid, refunded
+  paymentMethod     String?   // "stripe", "western_union"
+  stripePaymentId   String?   @unique
+  westernUnionMTCN  String?
+  amount            Float
+  scheduledAt       DateTime?
+  deliveredAt       DateTime?
+  googleCalendarId  String?
+  googleMeetLink    String?
+  notes             String?   @db.Text
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([customerId, status])
+  @@index([paymentStatus])
+  @@index([scheduledAt])
+}
+
+// Admin notifications log
+model Notification {
+  id          String   @id @default(cuid())
+  type        String   // "new_booking", "payment_received", "support_request"
+  title       String
+  message     String   @db.Text
+  read        Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([read, createdAt])
+}
+
+// Webhook logs (for debugging)
+model WebhookLog {
+  id          String   @id @default(cuid())
+  provider    String   // "meta", "twilio", "stripe"
+  event       String
+  payload     Json
+  processed   Boolean  @default(false)
+  error       String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([provider, processed])
+  @@index([createdAt])
+}

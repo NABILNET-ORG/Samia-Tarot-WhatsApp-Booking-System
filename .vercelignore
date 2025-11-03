@@ -1,0 +1,10 @@
+# Vercel ignore
+node_modules
+.env
+.env.local
+.git
+.next
+tests
+scripts
+*.md
+!README.md

@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-purple: #6B46C1;
+  --primary-indigo: #4C1D95;
+  --mystical-gold: #D4AF37;
+  --moon-white: #F7FAFC;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-purple-50 via-indigo-50 to-purple-100;
+    @apply text-gray-900;
+    @apply min-h-screen;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-purple-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-purple-400 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-purple-500;
+  }
+}
+
+@layer components {
+  /* Mobile-first button */
+  .btn {
+    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-200;
+    @apply active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply shadow-md hover:shadow-lg;
+    min-height: 48px; /* Touch-friendly */
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-purple-600 to-indigo-600;
+    @apply text-white hover:from-purple-700 hover:to-indigo-700;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-purple-600 border-2 border-purple-600;
+    @apply hover:bg-purple-50;
+  }
+
+  /* Card component */
+  .card {
+    @apply bg-white rounded-2xl shadow-lg p-6;
+    @apply border border-purple-100;
+  }
+
+  /* Input fields - mobile optimized */
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border-2 border-purple-200;
+    @apply focus:border-purple-500 focus:ring-2 focus:ring-purple-200;
+    @apply transition-all duration-200 outline-none;
+    @apply text-base; /* Prevent zoom on iOS */
+    min-height: 48px;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    @apply animate-spin rounded-full border-4 border-purple-200;
+    @apply border-t-purple-600;
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Mystical glow effect */
+  .mystical-glow {
+    box-shadow: 0 0 20px rgba(107, 70, 193, 0.3);
+  }
+
+  /* Arabic text support */
+  .rtl {
+    direction: rtl;
+    @apply font-arabic;
+  }
+
+  /* Service card */
+  .service-card {
+    @apply card hover:shadow-xl transition-all duration-300;
+    @apply cursor-pointer active:scale-98;
+    @apply border-2 border-transparent hover:border-purple-300;
+  }
+
+  .service-card.selected {
+    @apply border-purple-500 mystical-glow;
+  }
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Touch-friendly spacing */
+  .touch-spacing {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* PWA safe areas */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
