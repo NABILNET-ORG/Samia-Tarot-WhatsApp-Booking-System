@@ -58,11 +58,17 @@ export default function AdminDashboard() {
 
       if (res.ok) {
         setCurrentProvider(provider)
-        alert(`Switched to ${provider === 'meta' ? 'Meta WhatsApp Business' : 'Twilio'}`)
+        alert(`✅ Switched to ${provider === 'meta' ? 'Meta WhatsApp Business' : 'Twilio'}!`)
+
+        // Reload dashboard data to sync
+        loadDashboardData()
+
+        // Reload page to update all components
+        setTimeout(() => window.location.reload(), 1000)
       }
     } catch (error) {
       console.error('Failed to switch provider:', error)
-      alert('Failed to switch provider')
+      alert('❌ Failed to switch provider')
     }
   }
 
