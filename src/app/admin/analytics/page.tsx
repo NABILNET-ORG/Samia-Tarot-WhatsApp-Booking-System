@@ -34,7 +34,7 @@ export default function AnalyticsPage() {
         .gte('created_at', today)
         .eq('payment_status', 'completed')
 
-      const todayRevenue = todayBookings?.reduce((sum, b) => sum + Number(b.amount), 0) || 0
+      const todayRevenue = todayBookings?.reduce((sum: number, b: any) => sum + Number(b.amount), 0) || 0
 
       // This week's revenue
       const weekStart = new Date()
@@ -45,7 +45,7 @@ export default function AnalyticsPage() {
         .gte('created_at', weekStart.toISOString())
         .eq('payment_status', 'completed')
 
-      const weekRevenue = weekBookings?.reduce((sum, b) => sum + Number(b.amount), 0) || 0
+      const weekRevenue = weekBookings?.reduce((sum: number, b: any) => sum + Number(b.amount), 0) || 0
 
       // This month's revenue
       const monthStart = new Date()
@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
         .gte('created_at', monthStart.toISOString())
         .eq('payment_status', 'completed')
 
-      const monthRevenue = monthBookings?.reduce((sum, b) => sum + Number(b.amount), 0) || 0
+      const monthRevenue = monthBookings?.reduce((sum: number, b: any) => sum + Number(b.amount), 0) || 0
 
       // All-time revenue
       const { data: allBookings } = await supabase
@@ -64,7 +64,7 @@ export default function AnalyticsPage() {
         .select('amount')
         .eq('payment_status', 'completed')
 
-      const allTimeRevenue = allBookings?.reduce((sum, b) => sum + Number(b.amount), 0) || 0
+      const allTimeRevenue = allBookings?.reduce((sum: number, b: any) => sum + Number(b.amount), 0) || 0
 
       setRevenue({
         today: todayRevenue,
