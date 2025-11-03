@@ -41,8 +41,11 @@ export class CalendarHelpers {
       const endDate = new Date()
       endDate.setDate(endDate.getDate() + 7)
 
+      // Use specified calendar or primary
+      const calendarId = process.env.GOOGLE_CALENDAR_ID || 'tarotsamia@gmail.com'
+
       const { data } = await calendar.events.list({
-        calendarId: 'primary',
+        calendarId,
         timeMin: now.toISOString(),
         timeMax: endDate.toISOString(),
         singleEvents: true,
@@ -188,8 +191,11 @@ export class CalendarHelpers {
         },
       }
 
+      // Use specified calendar or primary
+      const calendarId = process.env.GOOGLE_CALENDAR_ID || 'tarotsamia@gmail.com'
+
       const { data } = await calendar.events.insert({
-        calendarId: 'primary',
+        calendarId,
         conferenceDataVersion: 1,
         requestBody: event,
       })
