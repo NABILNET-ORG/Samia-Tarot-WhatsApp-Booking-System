@@ -137,7 +137,8 @@ ${services
 
 **PAYMENT OPTIONS:**
 - Credit Card (Stripe) - All countries
-- Western Union - MENA countries only (+961, +963, +20, +218, +212, +216, +213, +964, +967)
+- Western Union - NOCARD countries only (+213, +20, +964, +961, +218, +212, +963, +216, +967)
+  NOCARD Countries: Algeria, Egypt, Iraq, Lebanon, Libya, Morocco, Syria, Tunisia, Yemen
 
 **CURRENT CONTEXT:**
 - Current State: ${context.currentState}

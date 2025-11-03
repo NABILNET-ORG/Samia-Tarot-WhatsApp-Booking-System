@@ -300,12 +300,12 @@ ${services.map(s => `- ID ${s.id}: ${s.name_english} (${s.name_arabic}) - $${s.p
       throw new Error('Service not found')
     }
 
-    // Check if MENA country (for Western Union option)
-    const isMENA = this.isMENACountry(customer.phone)
+    // Check if NOCARD country (for Western Union option)
+    const isNOCARD = this.isNOCARDCountry(customer.phone)
 
     const provider = getWhatsAppProvider()
 
-    if (isMENA) {
+    if (isNOCARD) {
       // Offer choice: Stripe or Western Union
       const message = conversation.language === 'ar'
         ? `💳 اختر طريقة الدفع:\n\n1️⃣ بطاقة ائتمان (Stripe)\n2️⃣ ويسترن يونيون\n\nالمبلغ: $${service.price}\n\nاكتب رقم الطريقة:`
@@ -352,10 +352,11 @@ ${services.map(s => `- ID ${s.id}: ${s.name_english} (${s.name_arabic}) - $${s.p
   }
 
   /**
-   * Check if phone is from MENA country
+   * Check if phone is from NOCARD country (Western Union available)
+   * NOCARD Countries: Algeria, Egypt, Iraq, Lebanon, Libya, Morocco, Syria, Tunisia, Yemen
    */
-  private static isMENACountry(phone: string): boolean {
-    const menaPrefixes = ['+961', '+963', '+20', '+218', '+212', '+216', '+213', '+964', '+967']
-    return menaPrefixes.some((prefix) => phone.startsWith(prefix))
+  private static isNOCARDCountry(phone: string): boolean {
+    const nocardPrefixes = ['+213', '+20', '+964', '+961', '+218', '+212', '+963', '+216', '+967']
+    return nocardPrefixes.some((prefix) => phone.startsWith(prefix))
   }
 }

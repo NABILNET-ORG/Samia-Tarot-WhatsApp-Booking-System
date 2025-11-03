@@ -224,11 +224,11 @@ export class WorkflowEngine {
       throw new Error('Service not found for payment')
     }
 
-    // Check if MENA country
-    const menaPrefixes = ['+961', '+963', '+20', '+218', '+212', '+216', '+213', '+964', '+967']
-    const isMENA = menaPrefixes.some((prefix) => customer.phone.startsWith(prefix))
+    // Check if NOCARD country (Western Union available)
+    const nocardPrefixes = ['+213', '+20', '+964', '+961', '+218', '+212', '+963', '+216', '+967']
+    const isNOCARD = nocardPrefixes.some((prefix) => customer.phone.startsWith(prefix))
 
-    if (isMENA) {
+    if (isNOCARD) {
       // Offer both options
       const message =
         language === 'ar'
