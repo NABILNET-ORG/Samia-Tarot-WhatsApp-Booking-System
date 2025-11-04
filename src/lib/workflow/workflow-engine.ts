@@ -290,11 +290,19 @@ export class WorkflowEngine {
       const slots = await CalendarHelpers.getAvailableSlots(duration)
 
       if (slots.length === 0) {
-        // No slots available
+        // No slots available - all booked
         const message =
           aiDecision.language === 'ar'
-            ? 'عذراً، لا توجد مواعيد متاحة حالياً. الرجاء التواصل مع الدعم.'
-            : 'Sorry, no available time slots at the moment. Please contact support.'
+            ? `عذراً، جميع المواعيد محجوزة حالياً للأيام القادمة.\n\n` +
+              `يمكنك:\n` +
+              `1️⃣ اختيار خدمة قراءة بدلاً من المكالمة\n` +
+              `2️⃣ التواصل مع الدعم لجدولة موعد خاص\n\n` +
+              `اكتب "قائمة" لرؤية خدمات القراءة المتاحة.`
+            : `Sorry, all available time slots are currently booked.\n\n` +
+              `You can:\n` +
+              `1️⃣ Choose a reading service instead of a call\n` +
+              `2️⃣ Contact support for a custom appointment\n\n` +
+              `Type 'menu' to see available reading services.`
 
         await provider.sendMessage({
           to: customer.phone,
