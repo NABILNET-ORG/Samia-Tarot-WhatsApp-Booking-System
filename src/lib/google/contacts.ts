@@ -30,6 +30,32 @@ export type ContactData = {
 
 export class ContactsHelpers {
   /**
+   * Search for existing contact by phone number
+   */
+  static async findContactByPhone(phone: string): Promise<any | null> {
+    try {
+      const people = getContactsClient()
+
+      // Search for contact by phone number
+      const { data } = await people.people.searchContacts({
+        query: phone.replace(/\D/g, ''), // Remove non-digits
+        readMask: 'names,emailAddresses,phoneNumbers,nicknames',
+      })
+
+      if (data.results && data.results.length > 0) {
+        const contact = data.results[0].person
+        console.log(`✅ Found existing contact in Google: ${contact?.names?.[0]?.displayName}`)
+        return contact
+      }
+
+      return null
+    } catch (error: any) {
+      console.error('❌ Error searching contacts:', error)
+      return null
+    }
+  }
+
+  /**
    * Save customer contact to Google Contacts
    */
   static async saveContact(contactData: ContactData): Promise<{ resourceName: string; vCardUrl?: string }> {

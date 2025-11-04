@@ -91,26 +91,81 @@ Arabic translation (الاسم الأول والاسم الأخير إذا كا�
   }
 
   /**
-   * Translate customer name and prepare both versions
+   * Translate customer name to both English AND Arabic
+   * Supports ANY input language (Chinese, French, Spanish, etc.)
    */
   static async translateCustomerName(customerName: string): Promise<{
     englishName: string
     arabicName: string
-    originalLanguage: 'arabic' | 'english'
+    originalLanguage: 'arabic' | 'english' | 'other'
   }> {
-    const translation = await this.translateName(customerName)
+    try {
+      const originalLanguage = this.detectLanguage(customerName)
 
-    if (translation.originalLanguage === 'arabic') {
-      return {
-        englishName: translation.translated,
-        arabicName: translation.original,
-        originalLanguage: 'arabic',
+      // If already in Arabic, just translate to English
+      if (originalLanguage === 'arabic') {
+        const translation = await this.translateName(customerName)
+        return {
+          englishName: translation.translated,
+          arabicName: customerName,
+          originalLanguage: 'arabic',
+        }
       }
-    } else {
+
+      // If in English, just translate to Arabic
+      if (originalLanguage === 'english') {
+        const translation = await this.translateName(customerName)
+        return {
+          englishName: customerName,
+          arabicName: translation.translated,
+          originalLanguage: 'english',
+        }
+      }
+
+      // For other languages (Chinese, French, etc.) - translate to BOTH English and Arabic
+      console.log(`🌐 Name in other language detected, translating to both English and Arabic`)
+
+      const toEnglishPrompt = `Translate this name to English. Provide only the English translation, nothing else.\n\nName: ${customerName}\n\nEnglish translation:`
+      const toArabicPrompt = `Translate this name to Arabic. Provide only the Arabic translation in Arabic script, nothing else.\n\nName: ${customerName}\n\nArabic translation:`
+
+      const [englishResult, arabicResult] = await Promise.all([
+        openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a professional name translator. Translate names accurately. Only provide the translated name, nothing else.' },
+            { role: 'user', content: toEnglishPrompt },
+          ],
+          temperature: 0.3,
+          max_tokens: 100,
+        }),
+        openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: 'You are a professional name translator. Translate names to Arabic script accurately. Only provide the Arabic translation, nothing else.' },
+            { role: 'user', content: toArabicPrompt },
+          ],
+          temperature: 0.3,
+          max_tokens: 100,
+        }),
+      ])
+
+      const englishName = englishResult.choices[0].message.content?.trim() || customerName
+      const arabicName = arabicResult.choices[0].message.content?.trim() || customerName
+
+      console.log(`✅ Translated: "${customerName}" → EN: "${englishName}", AR: "${arabicName}"`)
+
       return {
-        englishName: translation.original,
-        arabicName: translation.translated,
-        originalLanguage: 'english',
+        englishName,
+        arabicName,
+        originalLanguage: 'other',
+      }
+    } catch (error: any) {
+      console.error('❌ Translation error:', error)
+      // Fallback: use original name for both
+      return {
+        englishName: customerName,
+        arabicName: customerName,
+        originalLanguage: 'other',
       }
     }
   }

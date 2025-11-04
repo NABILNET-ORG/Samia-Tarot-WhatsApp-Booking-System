@@ -25,8 +25,44 @@ export class WorkflowEngine {
 
       // STEP 1: Get or create customer
       console.log('👤 Step 1: Get/Create customer...')
-      const customer = await supabaseHelpers.getOrCreateCustomer(phone)
+      let customer = await supabaseHelpers.getOrCreateCustomer(phone)
       console.log(`   ✅ Customer: ${customer.name_english || customer.id}`)
+
+      // STEP 1.5: Check Google Contacts if customer has no name/email
+      if (!customer.name_english && !customer.email) {
+        console.log('🔍 Checking Google Contacts for existing customer info...')
+        try {
+          const { ContactsHelpers } = await import('@/lib/google/contacts')
+          const existingContact = await ContactsHelpers.findContactByPhone(phone)
+
+          if (existingContact) {
+            const name = existingContact.names?.[0]?.displayName
+            const email = existingContact.emailAddresses?.[0]?.value
+            const nickname = existingContact.nicknames?.[0]?.value
+
+            if (name || email) {
+              console.log(`✅ Found in Google Contacts: ${name || 'No name'}, ${email || 'No email'}`)
+
+              // Update customer in database
+              await supabaseAdmin
+                .from('customers')
+                .update({
+                  name_english: name || customer.name_english,
+                  name_arabic: nickname || customer.name_arabic,
+                  email: email || customer.email,
+                })
+                .eq('id', customer.id)
+
+              // Reload customer
+              customer = await supabaseHelpers.getOrCreateCustomer(phone)
+              console.log('✅ Customer info loaded from Google Contacts')
+            }
+          }
+        } catch (contactError) {
+          console.log('⚠️  Could not check Google Contacts:', contactError)
+          // Continue without Google Contacts check
+        }
+      }
 
       // STEP 2: Load conversation (with memory!)
       console.log('💭 Step 2: Load conversation...')
