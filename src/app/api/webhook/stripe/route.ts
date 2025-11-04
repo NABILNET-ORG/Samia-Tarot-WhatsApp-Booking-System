@@ -11,6 +11,7 @@ import { ServiceHelpers } from '@/lib/supabase/services'
 import { PaymentHandler } from '@/lib/workflow/payment-handler'
 import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
 import { CalendarHelpers } from '@/lib/google/calendar'
+import { ContactsHelpers } from '@/lib/google/contacts'
 
 export async function POST(request: NextRequest) {
   try {
@@ -136,6 +137,40 @@ async function handleCheckoutCompleted(session: any) {
       }
     }
 
+    // Save contact to Google Contacts
+    try {
+      console.log('👥 Saving customer contact to Google...')
+      const { firstName, lastName } = ContactsHelpers.parseFullName(
+        customer.name_english || customer.name_arabic || 'Customer'
+      )
+
+      const contactData = {
+        firstName,
+        lastName,
+        nickname: customer.name_arabic, // Arabic name as nickname
+        phone: customer.phone,
+        email: customer.email,
+        notes: `Booking: ${booking.id.substring(0, 8)} | Service: ${service.name_english} | Amount: $${service.price}`,
+      }
+
+      const savedContact = await ContactsHelpers.saveContact(contactData)
+      console.log(`✅ Contact saved: ${savedContact.resourceName}`)
+
+      // Update booking with contact info
+      await supabaseAdmin
+        .from('bookings')
+        .update({
+          metadata: {
+            ...booking.metadata,
+            googleContactResourceName: savedContact.resourceName,
+          },
+        })
+        .eq('id', booking.id)
+    } catch (contactError: any) {
+      console.error('❌ Failed to save contact:', contactError.message)
+      // Continue with booking confirmation even if contact save fails
+    }
+
     // Track payment completed
     await supabaseHelpers.trackEvent('payment_completed', {
       customer_id: customerId,
@@ -147,8 +182,8 @@ async function handleCheckoutCompleted(session: any) {
     // Send confirmation to customer
     await sendBookingConfirmation(customer, booking, service, language)
 
-    // Notify admin
-    await notifyAdminNewBooking(customer, booking, service)
+    // Notify admin with contact details
+    await notifyAdminNewBooking(customer, booking, service, language)
 
     console.log('🎉 Payment flow completed successfully!')
   } catch (error: any) {
@@ -216,32 +251,53 @@ async function sendBookingConfirmation(customer: any, booking: any, service: any
 }
 
 /**
- * Notify admin of new booking
+ * Notify admin of new booking with contact details
  */
-async function notifyAdminNewBooking(customer: any, booking: any, service: any) {
+async function notifyAdminNewBooking(customer: any, booking: any, service: any, language: string) {
   const provider = getWhatsAppProvider()
   const adminPhone = process.env.ADMIN_PHONE_NUMBER || '+9613620860'
 
-  const message = `🎉 حجز جديد! / New Booking!\n\n` +
-    `👤 العميل / Customer: ${customer.name_english || customer.name_arabic || 'Unknown'}\n` +
-    `📱 الهاتف / Phone: ${customer.phone}\n` +
-    `📧 البريد / Email: ${customer.email || 'N/A'}\n` +
-    `🔮 الخدمة / Service: ${service.name_english}\n` +
-    `💰 المبلغ / Amount: $${service.price}\n` +
-    `📅 التسليم / Delivery: ${new Date(booking.scheduled_date).toLocaleString()}\n` +
-    `💳 معرف الدفع / Payment ID: ${booking.stripe_payment_id || 'Pending'}\n` +
-    `📲 رقم الحجز / Booking: ${booking.id.substring(0, 8)}`
+  // Parse customer name
+  const { firstName, lastName } = ContactsHelpers.parseFullName(
+    customer.name_english || customer.name_arabic || 'Customer'
+  )
 
+  // Prepare contact data
+  const contactData = {
+    firstName,
+    lastName,
+    nickname: customer.name_arabic,
+    phone: customer.phone,
+    email: customer.email,
+    notes: `Booking: ${booking.id.substring(0, 8)} | Service: ${service.name_english} | $${service.price}`,
+  }
+
+  // Format contact message
+  const contactMessage = ContactsHelpers.formatContactMessage(
+    contactData,
+    booking,
+    service,
+    language as 'ar' | 'en'
+  )
+
+  // Send contact details to admin
   await provider.sendMessage({
     to: adminPhone,
-    body: message,
+    body: contactMessage,
   })
+
+  // Generate and send vCard
+  const vCard = ContactsHelpers.generateVCard(contactData)
+
+  // Note: WhatsApp API doesn't support vCard directly via API
+  // The formatted message above includes all contact info
+  // Admin can manually save to contacts from the message
 
   // Save notification to database
   await supabaseHelpers.notifyAdmin(
     'new_booking',
-    'New Booking',
-    message,
+    'New Booking with Contact',
+    contactMessage,
     {
       priority: 'medium',
       relatedBookingId: booking.id,
@@ -249,11 +305,13 @@ async function notifyAdminNewBooking(customer: any, booking: any, service: any) 
       metadata: {
         service_id: service.id,
         amount: service.price,
+        customer_phone: customer.phone,
+        customer_email: customer.email,
       },
     }
   )
 
-  console.log(`✅ Admin notified`)
+  console.log(`✅ Admin notified with contact details`)
 }
 
 /**
