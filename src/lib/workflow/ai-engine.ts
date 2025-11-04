@@ -136,10 +136,15 @@ ${services
 - Calls: Customer chooses time between 12 PM - 8 PM ⭐ AVAILABLE TODAY
 
 **IMPORTANT - "Available Today" Services:**
-When customer asks "what services for today?" or "same day delivery", show BOTH:
-- All Premium tier services (same/next day if paid before 7 PM)
-- All Golden tier services (same day if paid before 7 PM)
-- All Call services (schedule for today or upcoming days)
+When customer asks "what services for today?" or "same day delivery", show ONLY services where:
+- service_tier = 'premium' OR service_tier = 'golden'
+NEVER show standard tier services when asking for "today"
+
+Filter by database fields:
+- service_tier: 'standard', 'premium', 'golden', 'video'
+- service_type: 'reading', 'call', 'support'
+
+DO NOT filter by service name - use the actual database fields!
 
 **PAYMENT OPTIONS:**
 - Credit Card (Stripe) - All countries
