@@ -294,16 +294,14 @@ async function sendBookingConfirmation(customer: any, booking: any, service: any
         ? `✅ تم تأكيد حجزك!\n\n` +
           `🔮 الخدمة: ${service.name_arabic}\n` +
           `💰 المبلغ: $${service.price}\n` +
-          `📅 التسليم: ${deliveryDate.toLocaleDateString('ar-EG')} في الساعة 10:00 مساءً\n` +
           `📲 رقم الحجز: ${booking.id.substring(0, 8)}\n\n` +
-          `سيتم إرسال قراءتك عبر واتساب في الموعد المحدد.\n\n` +
+          `📞 الدكتورة سامية ستتواصل معك في أقرب وقت ممكن.\n\n` +
           `شكراً لثقتك بنا! 🙏✨`
         : `✅ Booking Confirmed!\n\n` +
           `🔮 Service: ${service.name_english}\n` +
           `💰 Amount: $${service.price}\n` +
-          `📅 Delivery: ${deliveryDate.toLocaleDateString('en-US')} at 10:00 PM\n` +
           `📲 Booking ID: ${booking.id.substring(0, 8)}\n\n` +
-          `Your reading will be sent via WhatsApp at the scheduled time.\n\n` +
+          `📞 Dr. Samia will contact you as soon as possible.\n\n` +
           `Thank you for your trust! 🙏✨`
   }
 

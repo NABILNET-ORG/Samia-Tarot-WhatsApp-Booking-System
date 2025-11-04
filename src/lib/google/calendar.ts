@@ -215,6 +215,7 @@ export class CalendarHelpers {
 
   /**
    * Format time slots for WhatsApp message
+   * Shows ONLY the closest available slot
    */
   static formatSlotsForWhatsApp(slots: TimeSlot[], language: 'ar' | 'en'): string {
     if (slots.length === 0) {
@@ -223,29 +224,33 @@ export class CalendarHelpers {
         : 'Sorry, no available slots at the moment. Please try again later.'
     }
 
+    // Show ONLY the first (closest) slot
+    const closestSlot = slots[0]
+    const displayText = language === 'ar' ? closestSlot.displayTextAr : closestSlot.displayText
+
     let message =
       language === 'ar'
-        ? '📅 الأوقات المتاحة للمكالمة (أقرب المواعيد أولاً):\n\n'
-        : '📅 Available Call Times (closest first):\n\n'
-
-    // Show max 10 closest slots
-    const displaySlots = slots.slice(0, 10)
-
-    displaySlots.forEach((slot, index) => {
-      const displayText = language === 'ar' ? slot.displayTextAr : slot.displayText
-      message += `${index + 1}. ${displayText}\n`
-    })
-
-    message +=
-      '\n⚠️ ' +
-      (language === 'ar'
-        ? 'تنبيه: الموعد سيصبح غير متاح بعد 15 دقيقة من اختيارك.\n\n'
-        : 'Note: Time slot expires 15 minutes after selection.\n\n') +
-      (language === 'ar'
-        ? 'اكتب رقم الموعد المناسب لك:'
-        : 'Type the number of your preferred time:')
+        ? `📅 أقرب موعد متاح:\n\n🕐 ${displayText}\n\n` +
+          `⚠️ هذا الموعد سيصبح غير متاح بعد 15 دقيقة من الآن.\n\n` +
+          `اكتب "نعم" لتأكيد هذا الموعد\n` +
+          `أو اكتب "موعد آخر" لرؤية الموعد التالي\n` +
+          `أو اذكر وقت محدد (مثال: "3:00 PM" أو "15:00")`
+        : `📅 Next Available Time:\n\n🕐 ${displayText}\n\n` +
+          `⚠️ This slot will expire 15 minutes from now.\n\n` +
+          `Type "yes" to confirm this time\n` +
+          `Or "next" to see the next available slot\n` +
+          `Or specify a time (e.g., "3:00 PM" or "15:00")`
 
     return message
+  }
+
+  /**
+   * Find slot closest to requested time
+   */
+  static findClosestSlot(slots: TimeSlot[], requestedTime: string): TimeSlot | null {
+    // TODO: Parse requested time and find closest match
+    // For now, return first available
+    return slots[0] || null
   }
 
   /**
@@ -273,12 +278,7 @@ export class CalendarHelpers {
           date: params.dueDate.toISOString().split('T')[0], // Same day
           timeZone: process.env.BUSINESS_TIMEZONE || 'Asia/Beirut',
         },
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: 'popup', minutes: 120 }, // 2 hours before (8 PM for 10 PM delivery)
-          ],
-        },
+        // No reminders for reading tasks - admin will handle delivery
       }
 
       const { data } = await calendar.events.insert({
