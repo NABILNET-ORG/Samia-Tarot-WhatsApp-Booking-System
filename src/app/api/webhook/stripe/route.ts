@@ -12,6 +12,7 @@ import { PaymentHandler } from '@/lib/workflow/payment-handler'
 import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
 import { CalendarHelpers } from '@/lib/google/calendar'
 import { ContactsHelpers } from '@/lib/google/contacts'
+import { NameTranslator } from '@/lib/ai/translator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -137,17 +138,27 @@ async function handleCheckoutCompleted(session: any) {
       }
     }
 
-    // Save contact to Google Contacts
+    // Save contact to Google Contacts with AI translation
     try {
-      console.log('👥 Saving customer contact to Google...')
-      const { firstName, lastName } = ContactsHelpers.parseFullName(
-        customer.name_english || customer.name_arabic || 'Customer'
-      )
+      console.log('👥 Saving customer contact to Google with translation...')
+
+      // Get customer name (prefer the one they provided in their language)
+      const originalName = customer.name_english || customer.name_arabic || 'Customer'
+
+      // Translate name to both languages using AI
+      console.log('🌐 Translating customer name...')
+      const { englishName, arabicName } = await NameTranslator.translateCustomerName(originalName)
+
+      console.log(`📝 English name: ${englishName}`)
+      console.log(`📝 Arabic name: ${arabicName}`)
+
+      // Parse English name into first/last
+      const { firstName, lastName } = ContactsHelpers.parseFullName(englishName)
 
       const contactData = {
         firstName,
         lastName,
-        nickname: customer.name_arabic, // Arabic name as nickname
+        nickname: arabicName, // Arabic name as nickname
         phone: customer.phone,
         email: customer.email,
         notes: `Booking: ${booking.id.substring(0, 8)} | Service: ${service.name_english} | Amount: $${service.price}`,
@@ -156,6 +167,15 @@ async function handleCheckoutCompleted(session: any) {
       const savedContact = await ContactsHelpers.saveContact(contactData)
       console.log(`✅ Contact saved: ${savedContact.resourceName}`)
 
+      // Update customer record with both language versions
+      await supabaseAdmin
+        .from('customers')
+        .update({
+          name_english: englishName,
+          name_arabic: arabicName,
+        })
+        .eq('id', customer.id)
+
       // Update booking with contact info
       await supabaseAdmin
         .from('bookings')
@@ -163,9 +183,15 @@ async function handleCheckoutCompleted(session: any) {
           metadata: {
             ...booking.metadata,
             googleContactResourceName: savedContact.resourceName,
+            translatedNames: {
+              english: englishName,
+              arabic: arabicName,
+            },
           },
         })
         .eq('id', booking.id)
+
+      console.log('✅ Customer record updated with translated names')
     } catch (contactError: any) {
       console.error('❌ Failed to save contact:', contactError.message)
       // Continue with booking confirmation even if contact save fails
