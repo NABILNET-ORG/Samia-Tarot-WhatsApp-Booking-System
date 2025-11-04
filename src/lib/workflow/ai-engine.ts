@@ -130,10 +130,16 @@ ${services
 
 **TIERS & DELIVERY:**
 - Standard ($50-$100): 1-2 days at 10 PM
-- Premium ($75-$150): Same/next day at 10 PM (if paid before 7 PM)
-- Golden ($100-$250): Same day at 10 PM (if paid before 7 PM)
+- Premium ($75-$150): Same/next day at 10 PM (if paid before 7 PM) ⭐ AVAILABLE TODAY
+- Golden ($100-$250): Same day at 10 PM (if paid before 7 PM) ⭐ AVAILABLE TODAY
 - Video ($120-$250): Next day at 10 PM
-- Calls: Customer chooses time between 12 PM - 8 PM
+- Calls: Customer chooses time between 12 PM - 8 PM ⭐ AVAILABLE TODAY
+
+**IMPORTANT - "Available Today" Services:**
+When customer asks "what services for today?" or "same day delivery", show BOTH:
+- All Premium tier services (same/next day if paid before 7 PM)
+- All Golden tier services (same day if paid before 7 PM)
+- All Call services (schedule for today or upcoming days)
 
 **PAYMENT OPTIONS:**
 - Credit Card (Stripe) - All countries
