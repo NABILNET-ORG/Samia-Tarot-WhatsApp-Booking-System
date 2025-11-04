@@ -101,13 +101,21 @@ async function handleCheckoutCompleted(session: any) {
     // Create calendar event for call services
     if (service.service_type === 'call' && booking.metadata?.selectedSlot) {
       try {
-        console.log('📅 Creating Google Calendar event...')
+        console.log('📅 Creating Google Calendar event for call...')
         const slot = booking.metadata.selectedSlot
+
+        // Calculate actual duration (service might be multiple 30-min slots)
+        // Example: "2x 30-Minute Call" = 60 minutes
+        const actualDuration = service.duration_minutes || 30
+
+        const startTime = new Date(slot.startTime)
+        const endTime = new Date(startTime.getTime() + actualDuration * 60 * 1000)
+
         const calendarEvent = await CalendarHelpers.createEvent({
           summary: `${service.name_english} - ${customer.name_english || 'Customer'}`,
-          description: `Booking ID: ${booking.id}\nCustomer: ${customer.name_english || customer.name_arabic}\nPhone: ${customer.phone}\nEmail: ${customer.email || 'N/A'}`,
-          startTime: new Date(slot.startTime),
-          endTime: new Date(slot.endTime),
+          description: `Booking ID: ${booking.id}\nCustomer: ${customer.name_english || customer.name_arabic}\nPhone: ${customer.phone}\nEmail: ${customer.email || 'N/A'}\nService: ${service.name_english}\nDuration: ${actualDuration} minutes`,
+          startTime,
+          endTime,
           attendeeEmail: customer.email,
           attendeeName: customer.name_english || customer.name_arabic,
         })
@@ -135,6 +143,37 @@ async function handleCheckoutCompleted(session: any) {
       } catch (calendarError: any) {
         console.error('❌ Failed to create calendar event:', calendarError.message)
         // Continue with booking confirmation even if calendar fails
+      }
+    }
+
+    // Create calendar task for reading services (all-day task at 10 PM)
+    if (service.service_type === 'reading') {
+      try {
+        console.log('📅 Creating Google Calendar task for reading delivery...')
+        const deliveryDate = new Date(booking.scheduled_date)
+
+        const readingTask = await CalendarHelpers.createReadingTask({
+          summary: `📖 ${service.name_english} - ${customer.name_english || 'Customer'}`,
+          description: `Deliver Reading at 10 PM\n\nBooking ID: ${booking.id}\nCustomer: ${customer.name_english || customer.name_arabic}\nPhone: ${customer.phone}\nEmail: ${customer.email || 'N/A'}\nService: ${service.name_english}\nTier: ${service.service_tier}`,
+          dueDate: deliveryDate,
+          customerEmail: customer.email,
+        })
+
+        // Update booking with task info
+        await supabaseAdmin
+          .from('bookings')
+          .update({
+            metadata: {
+              ...booking.metadata,
+              calendarTaskId: readingTask.taskId,
+            },
+          })
+          .eq('id', booking.id)
+
+        console.log(`✅ Reading delivery task created: ${readingTask.taskId}`)
+      } catch (taskError: any) {
+        console.error('❌ Failed to create reading task:', taskError.message)
+        // Continue even if task creation fails
       }
     }
 

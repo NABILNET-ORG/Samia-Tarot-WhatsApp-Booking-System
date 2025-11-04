@@ -31,6 +31,7 @@ export type TimeSlot = {
 export class CalendarHelpers {
   /**
    * Get available time slots for next 7 days
+   * Minimum 1 hour from now, closest slots first
    */
   static async getAvailableSlots(durationMinutes: number = 30): Promise<TimeSlot[]> {
     try {
@@ -38,6 +39,8 @@ export class CalendarHelpers {
 
       // Get events for next 7 days
       const now = new Date()
+      // Minimum 1 hour from now for slot availability
+      const minStartTime = new Date(now.getTime() + 60 * 60 * 1000)
       const endDate = new Date()
       endDate.setDate(endDate.getDate() + 7)
 
@@ -86,8 +89,8 @@ export class CalendarHelpers {
               continue
             }
 
-            // Skip if slot is in the past
-            if (slotStart < now) {
+            // Skip if slot is less than 1 hour from now
+            if (slotStart < minStartTime) {
               continue
             }
 
@@ -222,21 +225,76 @@ export class CalendarHelpers {
 
     let message =
       language === 'ar'
-        ? '📅 الأوقات المتاحة للمكالمة:\n\n'
-        : '📅 Available Call Times:\n\n'
+        ? '📅 الأوقات المتاحة للمكالمة (أقرب المواعيد أولاً):\n\n'
+        : '📅 Available Call Times (closest first):\n\n'
 
-    slots.forEach((slot, index) => {
+    // Show max 10 closest slots
+    const displaySlots = slots.slice(0, 10)
+
+    displaySlots.forEach((slot, index) => {
       const displayText = language === 'ar' ? slot.displayTextAr : slot.displayText
       message += `${index + 1}. ${displayText}\n`
     })
 
     message +=
-      '\n' +
+      '\n⚠️ ' +
+      (language === 'ar'
+        ? 'تنبيه: الموعد سيصبح غير متاح بعد 15 دقيقة من اختيارك.\n\n'
+        : 'Note: Time slot expires 15 minutes after selection.\n\n') +
       (language === 'ar'
         ? 'اكتب رقم الموعد المناسب لك:'
         : 'Type the number of your preferred time:')
 
     return message
+  }
+
+  /**
+   * Create all-day task for reading services (not timed events)
+   */
+  static async createReadingTask(params: {
+    summary: string
+    description: string
+    dueDate: Date
+    customerEmail?: string
+  }): Promise<{ taskId: string }> {
+    try {
+      const calendar = getCalendarClient()
+      const calendarId = process.env.GOOGLE_CALENDAR_ID || 'tarotsamia@gmail.com'
+
+      // Create all-day event (task)
+      const event = {
+        summary: params.summary,
+        description: params.description,
+        start: {
+          date: params.dueDate.toISOString().split('T')[0], // All-day format: YYYY-MM-DD
+          timeZone: process.env.BUSINESS_TIMEZONE || 'Asia/Beirut',
+        },
+        end: {
+          date: params.dueDate.toISOString().split('T')[0], // Same day
+          timeZone: process.env.BUSINESS_TIMEZONE || 'Asia/Beirut',
+        },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: 'popup', minutes: 120 }, // 2 hours before (8 PM for 10 PM delivery)
+          ],
+        },
+      }
+
+      const { data } = await calendar.events.insert({
+        calendarId,
+        requestBody: event,
+      })
+
+      console.log(`✅ Reading task created: ${data.id}`)
+
+      return {
+        taskId: data.id!,
+      }
+    } catch (error: any) {
+      console.error('Calendar task creation error:', error)
+      throw new Error(`Failed to create reading task: ${error.message}`)
+    }
   }
 
   /**
