@@ -49,11 +49,9 @@ export async function getWhatsAppProviderForBusiness(
   }
 
   // Build provider config
-  const config: BusinessWhatsAppConfig = {
-    provider: business.whatsapp_provider || 'meta',
-  }
+  const providerType = business.whatsapp_provider || 'meta'
 
-  if (config.provider === 'meta') {
+  if (providerType === 'meta') {
     // Decrypt Meta credentials
     const accessToken = business.meta_access_token_encrypted
       ? decryptApiKey(business.meta_access_token_encrypted, businessId)
@@ -63,14 +61,14 @@ export async function getWhatsAppProviderForBusiness(
       ? decryptApiKey(business.meta_app_secret_encrypted, businessId)
       : process.env.META_APP_SECRET
 
-    config.meta = {
+    const metaConfig: MetaConfig = {
       phoneNumberId: business.meta_phone_number_id || process.env.META_WHATSAPP_PHONE_ID || '',
       accessToken,
       verifyToken: business.meta_verify_token || process.env.META_WHATSAPP_VERIFY_TOKEN || '',
       appSecret: appSecret || '',
     }
 
-    const provider = new MetaWhatsAppProvider(config.meta)
+    const provider = new MetaWhatsAppProvider(metaConfig)
     providerCache.set(businessId, provider)
     return provider
   } else {
@@ -83,13 +81,13 @@ export async function getWhatsAppProviderForBusiness(
       ? decryptApiKey(business.twilio_auth_token_encrypted, businessId)
       : process.env.TWILIO_AUTH_TOKEN || ''
 
-    config.twilio = {
+    const twilioConfig: TwilioConfig = {
       accountSid,
       authToken,
       whatsappNumber: business.twilio_whatsapp_number || process.env.TWILIO_WHATSAPP_NUMBER || '',
     }
 
-    const provider = new TwilioWhatsAppProvider(config.twilio)
+    const provider = new TwilioWhatsAppProvider(twilioConfig)
     providerCache.set(businessId, provider)
     return provider
   }
