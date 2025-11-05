@@ -41,11 +41,12 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/businesses - Create new business
+ * POST /api/businesses - Create new business (Public for signup)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const isSignup = body._signup === true // Flag for public signup
     const {
       name,
       slug,

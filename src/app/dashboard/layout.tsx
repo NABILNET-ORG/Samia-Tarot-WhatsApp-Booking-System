@@ -22,24 +22,14 @@ export default function DashboardLayout({
             <div className="flex items-center gap-6">
               <h1 className="text-xl font-bold text-gray-900">WhatsApp AI Platform</h1>
               <div className="flex gap-4">
-                <a
-                  href="/dashboard"
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Chat
-                </a>
-                <a
-                  href="/dashboard/employees"
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Team
-                </a>
-                <a
-                  href="/dashboard/templates"
-                  className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-                >
-                  Templates
-                </a>
+                <a href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium">Chat</a>
+                <a href="/dashboard/customers" className="text-gray-700 hover:text-gray-900 font-medium">Customers</a>
+                <a href="/dashboard/services" className="text-gray-700 hover:text-gray-900 font-medium">Services</a>
+                <a href="/dashboard/bookings" className="text-gray-700 hover:text-gray-900 font-medium">Bookings</a>
+                <a href="/dashboard/employees" className="text-gray-700 hover:text-gray-900 font-medium">Team</a>
+                <a href="/dashboard/templates" className="text-gray-700 hover:text-gray-900 font-medium">Templates</a>
+                <a href="/dashboard/analytics" className="text-gray-700 hover:text-gray-900 font-medium">Analytics</a>
+                <a href="/dashboard/settings" className="text-gray-700 hover:text-gray-900 font-medium">Settings</a>
               </div>
             </div>
 
