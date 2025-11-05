@@ -27,12 +27,12 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between mb-6">
-          <h1 className="text-3xl font-bold">Services</h1>
-          <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-            Add Service
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Services</h1>
+          <button className="w-full sm:w-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            + Add Service
           </button>
         </div>
 
