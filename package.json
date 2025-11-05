@@ -34,6 +34,7 @@
     "socket.io-client": "^4.6.0",
     "stripe": "^14.10.0",
     "twilio": "^4.20.0",
+    "web-push": "^3.6.7",
     "zustand": "^4.4.7"
   },
   "devDependencies": {
