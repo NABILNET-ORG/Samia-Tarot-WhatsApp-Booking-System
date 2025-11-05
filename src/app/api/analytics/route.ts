@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
         supabaseAdmin.from('bookings').select('amount').eq('business_id', context.business.id).eq('payment_status', 'completed'),
       ])
 
-      const totalRevenue = revenueResult.data?.reduce((sum, b) => sum + (b.amount || 0), 0) || 0
+      const totalRevenue = revenueResult.data?.reduce((sum: number, b: any) => sum + (b.amount || 0), 0) || 0
 
       return NextResponse.json({
         analytics: {

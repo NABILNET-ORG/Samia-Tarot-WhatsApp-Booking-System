@@ -81,8 +81,31 @@ export async function POST(request: NextRequest) {
 
     console.log(`💬 Message from ${from}: "${messageBody}"`)
 
-    // Handle the conversation with new WorkflowEngine
-    await WorkflowEngine.processMessage(from, messageBody)
+    // Find which business this message belongs to
+    const { findBusinessByPhone } = await import('@/lib/business/lookup')
+    const businessId = await findBusinessByPhone(from)
+
+    if (!businessId) {
+      console.error('❌ No business found for phone:', from)
+      return NextResponse.json({ error: 'Business not found' }, { status: 404 })
+    }
+
+    // Process message with AI engine (multi-tenant)
+    const processResponse = await fetch(`${request.nextUrl.origin}/api/webhook/process-message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        business_id: businessId,
+        phone: from,
+        message: messageBody,
+        media_url: incomingMessage.mediaUrl,
+        media_type: incomingMessage.mediaUrl ? 'image' : 'text',
+      }),
+    })
+
+    if (!processResponse.ok) {
+      throw new Error('Message processing failed')
+    }
 
     // Mark webhook as processed
     const processingTime = Date.now() - startTime

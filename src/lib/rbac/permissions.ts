@@ -46,11 +46,30 @@ export const DEFAULT_PERMISSIONS = {
   
   // Customer management
   customers: {
+    create: false,
     read: false,
     update: false,
     delete: false,
     list: false,
     export: false,
+  },
+
+  // Service management
+  services: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+    list: false,
+  },
+
+  // Booking management
+  bookings: {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+    list: false,
   },
   
   // Analytics & reporting
@@ -78,7 +97,9 @@ export const ROLE_PERMISSIONS = {
     employees: { create: true, read: true, update: true, delete: true, list: true },
     roles: { create: true, read: true, update: true, delete: true, list: true },
     conversations: { read: true, list: true, takeover: true, close: true, assign: true },
-    customers: { read: true, update: true, delete: true, list: true, export: true },
+    customers: { create: true, read: true, update: true, delete: true, list: true, export: true },
+    services: { create: true, read: true, update: true, delete: true, list: true },
+    bookings: { create: true, read: true, update: true, delete: true, list: true },
     analytics: { view: true, export: true },
     templates: { create: true, read: true, update: true, delete: true, list: true },
   },
