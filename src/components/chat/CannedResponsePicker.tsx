@@ -5,53 +5,15 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type CannedResponse = {
   id: string
   title: string
   content: string
   category: string
+  shortcut?: string
 }
-
-const CANNED_RESPONSES: CannedResponse[] = [
-  {
-    id: '1',
-    title: 'Welcome',
-    content: 'Hello! Welcome to our service. How can I help you today?',
-    category: 'Greetings',
-  },
-  {
-    id: '2',
-    title: 'Thank You',
-    content: 'Thank you for contacting us! Is there anything else I can help you with?',
-    category: 'Greetings',
-  },
-  {
-    id: '3',
-    title: 'Payment Received',
-    content: '✅ Payment received successfully! Your booking is confirmed.',
-    category: 'Payments',
-  },
-  {
-    id: '4',
-    title: 'Checking',
-    content: 'Let me check that for you. One moment please...',
-    category: 'Support',
-  },
-  {
-    id: '5',
-    title: 'Follow Up',
-    content: 'I wanted to follow up on your inquiry. Have you had a chance to review the information?',
-    category: 'Follow-up',
-  },
-  {
-    id: '6',
-    title: 'Availability',
-    content: 'Let me check our availability for you. What date and time works best?',
-    category: 'Booking',
-  },
-]
 
 type CannedResponsePickerProps = {
   onSelect: (content: string) => void
@@ -59,9 +21,29 @@ type CannedResponsePickerProps = {
 }
 
 export function CannedResponsePicker({ onSelect, onClose }: CannedResponsePickerProps) {
+  const [responses, setResponses] = useState<CannedResponse[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredResponses = CANNED_RESPONSES.filter((response) => {
+  useEffect(() => {
+    loadResponses()
+  }, [])
+
+  async function loadResponses() {
+    try {
+      const response = await fetch('/api/canned-responses')
+      const data = await response.json()
+      if (data.responses) {
+        setResponses(data.responses)
+      }
+    } catch (error) {
+      console.error('Failed to load canned responses:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredResponses = responses.filter((response) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -100,7 +82,11 @@ export function CannedResponsePicker({ onSelect, onClose }: CannedResponsePicker
 
       {/* Response List */}
       <div className="flex-1 overflow-y-auto">
-        {filteredResponses.length === 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-6">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
+          </div>
+        ) : filteredResponses.length === 0 ? (
           <div className="p-6 text-center text-gray-500 text-sm">
             No quick replies found
           </div>
