@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ConversationList } from '@/components/chat/ConversationList'
 import { ChatWindow } from '@/components/chat/ChatWindow'
 import { CustomerInfoPanel } from '@/components/chat/CustomerInfoPanel'
@@ -18,7 +18,7 @@ export default function DashboardPage() {
   const [isMobile, setIsMobile] = useState(false)
 
   // Check if mobile on mount
-  React.useEffect(() => {
+  useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024)
     checkMobile()
     window.addEventListener('resize', checkMobile)

@@ -33,6 +33,16 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [responses, setResponses] = useState<CannedResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    prompt_text: '',
+    category: 'general',
+    title: '',
+    content: '',
+    shortcut: '',
+  })
 
   useEffect(() => {
     loadData()
@@ -55,6 +65,52 @@ export default function TemplatesPage() {
       console.error('Failed to load data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleCreate() {
+    try {
+      const endpoint = activeTab === 'prompts' ? '/api/templates' : '/api/canned-responses'
+      const payload = activeTab === 'prompts'
+        ? {
+            name: formData.name,
+            description: formData.description,
+            prompt_text: formData.prompt_text,
+            category: formData.category,
+          }
+        : {
+            title: formData.title,
+            content: formData.content,
+            category: formData.category,
+            shortcut: formData.shortcut,
+          }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (response.ok) {
+        alert('✅ Created successfully!')
+        setShowCreateModal(false)
+        setFormData({
+          name: '',
+          description: '',
+          prompt_text: '',
+          category: 'general',
+          title: '',
+          content: '',
+          shortcut: '',
+        })
+        loadData()
+      } else {
+        const data = await response.json()
+        alert(`❌ Failed to create: ${data.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Failed to create:', error)
+      alert('❌ Failed to create. Please try again.')
     }
   }
 
@@ -96,7 +152,10 @@ export default function TemplatesPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">AI Prompt Templates</h2>
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
                 Create Template
               </button>
             </div>
@@ -149,7 +208,10 @@ export default function TemplatesPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900">Quick Reply Templates</h2>
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
                 Create Response
               </button>
             </div>
@@ -182,6 +244,146 @@ export default function TemplatesPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Create Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {activeTab === 'prompts' ? 'Create AI Prompt Template' : 'Create Quick Reply'}
+                  </h2>
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {activeTab === 'prompts' ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Name *</label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Greeting Template"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="general">General</option>
+                        <option value="greeting">Greeting</option>
+                        <option value="booking">Booking</option>
+                        <option value="payment">Payment</option>
+                        <option value="support">Support</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <input
+                        type="text"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Brief description of this template"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Prompt Text *</label>
+                      <textarea
+                        value={formData.prompt_text}
+                        onChange={(e) => setFormData({ ...formData, prompt_text: e.target.value })}
+                        rows={6}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter the AI prompt template text..."
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Thank You Message"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                      <select
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="general">General</option>
+                        <option value="greeting">Greeting</option>
+                        <option value="booking">Booking</option>
+                        <option value="payment">Payment</option>
+                        <option value="support">Support</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Shortcut (Optional)</label>
+                      <input
+                        type="text"
+                        value={formData.shortcut}
+                        onChange={(e) => setFormData({ ...formData, shortcut: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., /thanks"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Content *</label>
+                      <textarea
+                        value={formData.content}
+                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Enter the quick reply message..."
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreate}
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
