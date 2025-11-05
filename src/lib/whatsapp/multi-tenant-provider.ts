@@ -118,14 +118,14 @@ export async function sendWhatsAppMessage(
 ): Promise<{ messageId: string; status: string }> {
   const provider = await getWhatsAppProviderForBusiness(businessId)
 
-  if (options?.mediaUrl) {
-    return provider.sendMessage({
-      to,
-      message,
-      mediaUrl: options.mediaUrl,
-      mediaType: options.mediaType,
-    })
-  }
+  const result = await provider.sendMessage({
+    to,
+    body: message,
+    mediaUrl: options?.mediaUrl,
+  })
 
-  return provider.sendMessage({ to, message })
+  return {
+    messageId: result.messageId,
+    status: result.success ? 'sent' : 'failed',
+  }
 }
