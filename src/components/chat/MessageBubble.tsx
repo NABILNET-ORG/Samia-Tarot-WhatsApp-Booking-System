@@ -6,6 +6,7 @@
 'use client'
 
 import { formatDistanceToNow } from 'date-fns'
+import { VoicePlayer } from './VoicePlayer'
 
 type Message = {
   id: string
@@ -15,6 +16,11 @@ type Message = {
   message_type: 'text' | 'voice' | 'image' | 'document'
   created_at: string
   is_read: boolean
+  media_url?: string
+  media_duration_seconds?: number
+  transcription_text?: string
+  transcription_language?: string
+  transcription_confidence?: number
 }
 
 type MessageBubbleProps = {
@@ -56,7 +62,29 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
           }`}
         >
           {/* Message Content */}
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          {message.message_type === 'voice' && message.media_url ? (
+            <VoicePlayer
+              audioUrl={message.media_url}
+              duration={message.media_duration_seconds}
+              transcription={message.transcription_text}
+              transcriptionLanguage={message.transcription_language}
+              transcriptionConfidence={message.transcription_confidence}
+              messageId={message.id}
+            />
+          ) : message.message_type === 'image' && message.media_url ? (
+            <div>
+              <img
+                src={message.media_url}
+                alt="Shared image"
+                className="max-w-full rounded-lg"
+              />
+              {message.content && (
+                <p className="mt-2 whitespace-pre-wrap break-words">{message.content}</p>
+              )}
+            </div>
+          ) : (
+            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          )}
 
           {/* Timestamp & Status */}
           <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
