@@ -15,6 +15,8 @@ import { useBusinessContext } from '@/lib/multi-tenant/context'
 type ChatWindowProps = {
   conversationId: string
   onToggleCustomerInfo: () => void
+  onBack?: () => void
+  isMobile?: boolean
 }
 
 type Message = {
@@ -34,7 +36,7 @@ type Conversation = {
   phone: string
 }
 
-export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowProps) {
+export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMobile }: ChatWindowProps) {
   const { employee } = useBusinessContext()
   const [messages, setMessages] = useState<Message[]>([])
   const [conversation, setConversation] = useState<Conversation | null>(null)
@@ -117,45 +119,60 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowP
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+      {/* Header - WhatsApp Style */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-            C
-          </div>
-          <div>
-            <h2 className="font-semibold text-gray-900">Customer</h2>
-            <p className="text-sm text-gray-500">
-              {isConnected ? (
-                <span className="flex items-center gap-1">
-                  <span className="h-2 w-2 bg-green-500 rounded-full" />
-                  Connected
-                </span>
-              ) : (
-                'Connecting...'
-              )}
-            </p>
-          </div>
+          {/* Back Button (Mobile Only) */}
+          {isMobile && onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-100 rounded-full -ml-2"
+            >
+              <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Customer Avatar & Name (Clickable on mobile) */}
+          <button
+            onClick={onToggleCustomerInfo}
+            className="flex items-center gap-3 hover:bg-gray-50 rounded-lg p-2 -ml-2 transition-colors"
+          >
+            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+              {conversation?.phone?.[0] || 'C'}
+            </div>
+            <div className="text-left">
+              <h2 className="font-semibold text-gray-900">{conversation?.phone || 'Customer'}</h2>
+              <p className="text-xs text-gray-500">
+                {isConnected ? (
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 bg-green-500 rounded-full" />
+                    Online
+                  </span>
+                ) : (
+                  'Connecting...'
+                )}
+              </p>
+            </div>
+          </button>
         </div>
 
-        <button
-          onClick={onToggleCustomerInfo}
-          className="p-2 hover:bg-gray-100 rounded-lg"
-        >
-          <svg
-            className="h-6 w-6 text-gray-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        </button>
+        {/* Right Actions (Desktop Only) */}
+        {!isMobile && (
+          <div className="flex items-center gap-2">
+            <button className="p-2 hover:bg-gray-100 rounded-lg">
+              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-lg">
+              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Messages Area */}
