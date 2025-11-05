@@ -1,51 +1,56 @@
 # 🚀 NEXT ACTIONS
 
-## 🎯 TWO PARALLEL TRACKS:
+## 🎯 v2.0 SaaS Platform: ✅ 100% COMPLETE!
 
-### **Track A: v1.0 Production (Samia Tarot)** ✅ COMPLETE
-Current system is fully operational and deployed!
-
-**Optional Enhancements:**
-1. Test voice note handling (transcription infrastructure ready)
-2. Monitor Google Calendar/Contacts integration
-3. Verify Vercel has correct `GOOGLE_REFRESH_TOKEN`
+### **Current Status:**
+- All 10 sessions completed
+- Platform deployed to Vercel
+- Mobile-first responsive design
+- All features implemented
 
 ---
 
-### **Track B: v2.0 SaaS Platform** 🏗️ IN PROGRESS (20%)
+## 📋 IMMEDIATE ACTIONS (To Go Live):
 
-## 📋 IMMEDIATE NEXT SESSION (Session 2-3 Continuation):
+### **1. Add Environment Variables to Vercel** (10 min)
 
-### **1. Complete Backend APIs** (2-3 hours)
-**Files to create:**
-```
-src/app/api/businesses/route.ts         - Business CRUD
-src/app/api/businesses/[id]/route.ts    - Single business operations
-src/app/api/employees/route.ts          - Employee management
-src/app/api/employees/[id]/route.ts     - Single employee operations
-src/app/api/roles/route.ts              - Role management
-src/lib/rbac/permissions.ts             - Permission checker
-src/lib/multi-tenant/context.tsx        - React context provider
-```
+Visit: https://vercel.com/nabils-projects-447e19b8/samia-tarot-app/settings/environment-variables
 
-### **2. Run Database Migrations** (30 min)
+**Required variables (12 total):**
 ```
-1. Connect to Supabase
-2. Run all 7 migration files in order
-3. Verify tables created correctly
-4. Create first business (Samia Tarot)
-5. Migrate existing data
-6. Create admin employee account
-7. Test login and permissions
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+DATABASE_URL
+OPENAI_API_KEY
+NEXTAUTH_SECRET (generate new: openssl rand -base64 32)
+SESSION_SECRET (generate new: openssl rand -base64 32)
+ENCRYPTION_MASTER_KEY (generate new: openssl rand -base64 32)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY
+VAPID_SUBJECT
+NEXTAUTH_URL=https://samia-tarot-b6rvg4bkj-nabils-projects-447e19b8.vercel.app
 ```
 
-### **3. Test Multi-Tenancy** (1 hour)
+### **2. Refresh Expired Tokens** (15 min)
+
+**Meta WhatsApp Token:**
+- Get permanent token from Meta Business Suite
+- See: `docs/REFRESH_TOKENS_GUIDE.md`
+
+**Google OAuth Token (if needed):**
+- Run OAuth flow for new refresh token
+- See: `docs/REFRESH_TOKENS_GUIDE.md`
+
+### **3. Test Platform** (10 min)
 ```
-[ ] Create second test business
-[ ] Verify RLS prevents cross-business access
-[ ] Test employee login for each business
-[ ] Verify permission system blocks unauthorized actions
-[ ] Test API endpoints with different roles
+1. Wait for Vercel redeploy (after env vars)
+2. Visit: https://samia-tarot-b6rvg4bkj-nabils-projects-447e19b8.vercel.app/login
+3. Login: admin@samia-tarot.com / M@ma2009
+4. Test chat, customers, services, bookings
+5. Test mobile responsiveness
+6. Verify WhatsApp message sending
+7. Test AI conversation automation
 ```
 
 ---
