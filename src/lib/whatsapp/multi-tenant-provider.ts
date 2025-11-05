@@ -9,19 +9,17 @@ import { TwilioWhatsAppProvider } from './twilio-provider'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { decryptApiKey } from '@/lib/encryption/keys'
 
-type BusinessWhatsAppConfig = {
-  provider: 'meta' | 'twilio'
-  meta?: {
-    phoneNumberId: string
-    accessToken: string
-    verifyToken?: string
-    appSecret?: string
-  }
-  twilio?: {
-    accountSid: string
-    authToken: string
-    whatsappNumber: string
-  }
+type MetaConfig = {
+  phoneNumberId: string
+  accessToken: string
+  verifyToken: string
+  appSecret: string
+}
+
+type TwilioConfig = {
+  accountSid: string
+  authToken: string
+  whatsappNumber: string
 }
 
 // Cache providers per business (in-memory)
