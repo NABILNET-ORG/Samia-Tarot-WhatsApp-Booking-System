@@ -113,9 +113,30 @@ export async function POST(request: NextRequest) {
 
       if (error) throw error
 
-      // TODO: Send to customer via WhatsApp (integrate with existing WhatsApp service)
-      // This will be handled by the WhatsApp provider
-      // For now, just store in database and show in UI
+      // Send to customer via WhatsApp
+      try {
+        const { sendWhatsAppMessage } = await import('@/lib/whatsapp/multi-tenant-provider')
+
+        await sendWhatsAppMessage(
+          context.business.id,
+          conversation.phone,
+          content,
+          {
+            mediaUrl: media_url,
+            mediaType: message_type === 'image' ? 'image' : message_type === 'voice' ? 'audio' : undefined,
+          }
+        )
+
+        // Update message as delivered
+        await supabaseAdmin
+          .from('messages')
+          .update({ delivered_at: new Date().toISOString() })
+          .eq('id', message.id)
+      } catch (whatsappError: any) {
+        console.error('WhatsApp send error:', whatsappError)
+        // Message saved in DB but not sent - agent can retry
+        // Don't fail the API call, just log the error
+      }
 
       return NextResponse.json({
         message,
