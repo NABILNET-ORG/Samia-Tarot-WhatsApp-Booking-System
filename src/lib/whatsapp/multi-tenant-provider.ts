@@ -68,8 +68,8 @@ export async function getWhatsAppProviderForBusiness(
     config.meta = {
       phoneNumberId: business.meta_phone_number_id || process.env.META_WHATSAPP_PHONE_ID || '',
       accessToken,
-      verifyToken: business.meta_verify_token || process.env.META_WHATSAPP_VERIFY_TOKEN,
-      appSecret,
+      verifyToken: business.meta_verify_token || process.env.META_WHATSAPP_VERIFY_TOKEN || '',
+      appSecret: appSecret || '',
     }
 
     const provider = new MetaWhatsAppProvider(config.meta)
