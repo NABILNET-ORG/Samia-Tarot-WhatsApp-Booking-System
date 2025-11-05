@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       if (error) throw error
 
       // Remove password hashes from response
-      const sanitized = employees.map(emp => {
+      const sanitized = employees.map((emp: any) => {
         const { password_hash, ...rest } = emp
         return rest
       })

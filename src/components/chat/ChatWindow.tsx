@@ -55,7 +55,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowP
       setMessages((prev) => {
         const newMsgs = realtimeMessages.filter(
           (rm) => !prev.some((m) => m.id === rm.id)
-        )
+        ).map((rm: any) => ({ ...rm, is_read: rm.is_read || false }))
         return [...prev, ...newMsgs]
       })
     }

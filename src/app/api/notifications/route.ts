@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
       // Send push notifications
       if (subscriptions && subscriptions.length > 0) {
-        const pushPromises = subscriptions.map((sub) =>
+        const pushPromises = subscriptions.map((sub: any) =>
           sendPushNotification(
             {
               endpoint: sub.endpoint,

@@ -48,7 +48,7 @@ export function subscribeToMessages(
         table: 'messages',
         filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => {
+      (payload: any) => {
         onMessage(payload.new as Message)
       }
     )
@@ -66,7 +66,7 @@ export function subscribeToTyping(
 ): RealtimeChannel {
   const channel = supabase
     .channel(`typing:${conversationId}`)
-    .on('broadcast', { event: 'typing' }, ({ payload }) => {
+    .on('broadcast', { event: 'typing' }, ({ payload }: any) => {
       onTyping(payload as TypingIndicator)
     })
     .subscribe()
@@ -113,10 +113,10 @@ export function subscribeToPresence(
         .map((p: any) => p as PresenceState)
       onPresenceChange(presences)
     })
-    .on('presence', { event: 'join' }, ({ newPresences }) => {
+    .on('presence', { event: 'join' }, ({ newPresences }: any) => {
       console.log('Employee joined:', newPresences)
     })
-    .on('presence', { event: 'leave' }, ({ leftPresences }) => {
+    .on('presence', { event: 'leave' }, ({ leftPresences }: any) => {
       console.log('Employee left:', leftPresences)
     })
     .subscribe()
@@ -134,7 +134,7 @@ export async function trackPresence(
 ): Promise<RealtimeChannel> {
   const channel = supabase.channel(`presence:business:${businessId}`)
 
-  await channel.subscribe(async (status) => {
+  await channel.subscribe(async (status: string) => {
     if (status === 'SUBSCRIBED') {
       await channel.track({
         employee_id: employeeId,
@@ -172,7 +172,7 @@ export function subscribeToConversationUpdates(
         table: 'conversations',
         filter: `business_id=eq.${businessId}`,
       },
-      (payload) => {
+      (payload: any) => {
         onUpdate(payload.new)
       }
     )
