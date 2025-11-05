@@ -7,6 +7,8 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { MessageBubble } from './MessageBubble'
+import { MessageComposer } from './MessageComposer'
+import { TakeOverButton } from './TakeOverButton'
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
 
@@ -25,19 +27,26 @@ type Message = {
   is_read: boolean
 }
 
+type Conversation = {
+  id: string
+  mode: 'ai' | 'human' | 'hybrid'
+  assigned_employee_name?: string
+  phone: string
+}
+
 export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowProps) {
   const { employee } = useBusinessContext()
   const [messages, setMessages] = useState<Message[]>([])
+  const [conversation, setConversation] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(true)
-  const [newMessage, setNewMessage] = useState('')
-  const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { messages: realtimeMessages, typingUsers, isConnected } = useRealtimeMessages(conversationId)
 
-  // Load initial messages
+  // Load initial data
   useEffect(() => {
     loadMessages()
+    loadConversation()
   }, [conversationId])
 
   // Append realtime messages
@@ -73,35 +82,37 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowP
     }
   }
 
-  async function handleSendMessage(e: React.FormEvent) {
-    e.preventDefault()
-
-    if (!newMessage.trim() || sending) return
-
+  async function loadConversation() {
     try {
-      setSending(true)
+      const response = await fetch(`/api/conversations/${conversationId}`)
+      const data = await response.json()
 
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          content: newMessage.trim(),
-          message_type: 'text',
-        }),
-      })
-
-      if (response.ok) {
-        setNewMessage('')
-      } else {
-        alert('Failed to send message')
+      if (data.conversation) {
+        setConversation(data.conversation)
       }
     } catch (error) {
-      console.error('Send error:', error)
-      alert('Failed to send message')
-    } finally {
-      setSending(false)
+      console.error('Failed to load conversation:', error)
     }
+  }
+
+  async function handleSendMessage(content: string) {
+    const response = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversation_id: conversationId,
+        content,
+        message_type: 'text',
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to send message')
+    }
+  }
+
+  function handleTakeOver() {
+    loadConversation() // Reload to show updated mode
   }
 
   return (
@@ -149,6 +160,16 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowP
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Take Over Button */}
+        {conversation && (
+          <TakeOverButton
+            conversationId={conversationId}
+            currentMode={conversation.mode}
+            assignedTo={conversation.assigned_employee_name}
+            onTakeOver={handleTakeOver}
+          />
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
@@ -184,31 +205,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo }: ChatWindowP
 
       {/* Message Composer */}
       <div className="bg-white border-t border-gray-200 p-4">
-        <form onSubmit={handleSendMessage} className="flex items-end gap-3">
-          <div className="flex-1">
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage(e)
-                }
-              }}
-              placeholder="Type a message..."
-              rows={1}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || sending}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {sending ? 'Sending...' : 'Send'}
-          </button>
-        </form>
+        <MessageComposer onSendMessage={handleSendMessage} />
       </div>
     </div>
   )
