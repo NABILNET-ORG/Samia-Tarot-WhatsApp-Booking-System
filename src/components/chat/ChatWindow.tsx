@@ -41,6 +41,9 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
   const [messages, setMessages] = useState<Message[]>([])
   const [conversation, setConversation] = useState<Conversation | null>(null)
   const [loading, setLoading] = useState(true)
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showMenu, setShowMenu] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { messages: realtimeMessages, typingUsers, isConnected } = useRealtimeMessages(conversationId)
@@ -161,19 +164,105 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
         {/* Right Actions (Desktop Only) */}
         {!isMobile && (
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
+            <button
+              onClick={() => setShowSearch(!showSearch)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Search in conversation"
+            >
               <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
-              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="More options"
+              >
+                <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </button>
+              {/* Menu Dropdown */}
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <button
+                    onClick={() => {
+                      onToggleCustomerInfo()
+                      setShowMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Contact Info
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowSearch(true)
+                      setShowMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Search Messages
+                  </button>
+                  <button
+                    onClick={() => {
+                      // TODO: Export chat functionality
+                      alert('Export chat feature coming soon!')
+                      setShowMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Export Chat
+                  </button>
+                  <div className="border-t border-gray-200 my-1"></div>
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear this conversation?')) {
+                        // TODO: Clear conversation functionality
+                        alert('Clear conversation feature coming soon!')
+                      }
+                      setShowMenu(false)
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                  >
+                    Clear Conversation
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Search Bar (appears when search is active) */}
+      {showSearch && (
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search in messages..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
+              />
+              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <button
+              onClick={() => {
+                setShowSearch(false)
+                setSearchQuery('')
+              }}
+              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -196,13 +285,18 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((message) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isOwnMessage={message.sender_type === 'agent' && message.sender_name === employee?.full_name}
-            />
-          ))
+          messages
+            .filter((message) => {
+              if (!searchQuery) return true
+              return message.content.toLowerCase().includes(searchQuery.toLowerCase())
+            })
+            .map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isOwnMessage={message.sender_type === 'agent' && message.sender_name === employee?.full_name}
+              />
+            ))
         )}
 
         {/* Typing Indicator */}

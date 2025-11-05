@@ -44,6 +44,7 @@ export default function DashboardLayout({
                 <a href="/dashboard/bookings" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Bookings</a>
                 <a href="/dashboard/employees" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Team</a>
                 <a href="/dashboard/templates" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Templates</a>
+                <a href="/dashboard/ai-instructions" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">AI Config</a>
                 <a href="/dashboard/analytics" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Analytics</a>
                 <a href="/dashboard/settings" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Settings</a>
               </div>
@@ -97,6 +98,9 @@ export default function DashboardLayout({
                 </a>
                 <a href="/dashboard/templates" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   📝 Templates
+                </a>
+                <a href="/dashboard/ai-instructions" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  🤖 AI Config
                 </a>
                 <a href="/dashboard/analytics" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   📊 Analytics
