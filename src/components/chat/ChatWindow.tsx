@@ -8,6 +8,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { MessageBubble } from './MessageBubble'
 import { MessageComposer } from './MessageComposer'
+import { TakeOverButton } from './TakeOverButton'
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
 
@@ -113,6 +114,10 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
     if (!response.ok) {
       throw new Error('Failed to send message')
     }
+  }
+
+  function handleTakeOver() {
+    loadConversation() // Reload to show updated mode
   }
 
   return (
@@ -261,6 +266,16 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        {/* Take Over Button */}
+        {conversation && (
+          <TakeOverButton
+            conversationId={conversationId}
+            currentMode={conversation.mode}
+            assignedTo={conversation.assigned_employee_name}
+            onTakeOver={handleTakeOver}
+          />
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
