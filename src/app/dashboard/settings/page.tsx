@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
 
-type Tab = 'overview' | 'general' | 'secrets' | 'ai' | 'integrations'
+type Tab = 'overview' | 'general' | 'secrets' | 'integrations'
 
 export default function SettingsPage() {
   const { business: businessData, employee, refetch } = useBusinessContext()
@@ -203,9 +203,6 @@ export default function SettingsPage() {
                 🔐 Secrets
               </TabButton>
             )}
-            <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')}>
-              🤖 AI Config
-            </TabButton>
             <TabButton active={activeTab === 'integrations'} onClick={() => setActiveTab('integrations')}>
               🔌 Integrations
             </TabButton>
@@ -577,163 +574,6 @@ export default function SettingsPage() {
               className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 font-semibold"
             >
               {saving ? 'Saving Secrets...' : '🔐 Save Secrets (Encrypted)'}
-            </button>
-          </form>
-        )}
-
-        {/* AI Config Tab */}
-        {activeTab === 'ai' && (
-          <form onSubmit={handleSaveSettings} className="space-y-6">
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">Features</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 className="font-medium text-gray-900">Voice Notes</h3>
-                    <p className="text-sm text-gray-600">Allow bot to send voice note responses</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={settings.features_voice_transcription || business?.features_voice_transcription || false}
-                      onChange={(e) => setSettings({...settings, features_voice_transcription: e.target.checked})}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">AI Model Settings</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
-                  <select
-                    value={settings.ai_model || business?.ai_model || 'gpt-4o'}
-                    onChange={(e) => setSettings({...settings, ai_model: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  >
-                    <option value="gpt-4o">GPT-4o (Best quality)</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo (Faster)</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Cheaper)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (0-1)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    max="1"
-                    value={settings.ai_temperature || business?.ai_temperature || 0.7}
-                    onChange={(e) => setSettings({...settings, ai_temperature: parseFloat(e.target.value)})}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Higher = more creative, Lower = more focused</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens per Response</label>
-                  <input
-                    type="number"
-                    value={settings.ai_max_tokens || business?.ai_max_tokens || 700}
-                    onChange={(e) => setSettings({...settings, ai_max_tokens: parseInt(e.target.value)})}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Conversation Memory (messages)</label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="50"
-                    value={settings.ai_conversation_memory || business?.ai_conversation_memory || 10}
-                    onChange={(e) => setSettings({...settings, ai_conversation_memory: parseInt(e.target.value)})}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Number of previous messages AI remembers</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">📚 Knowledge Base (RAG)</h2>
-              <p className="text-sm text-gray-600 mb-4">Add up to 20 website URLs. The AI will fetch content from these websites to answer business-specific questions.</p>
-
-              {/* Add URL Input */}
-              <div className="flex gap-2 mb-4">
-                <input
-                  type="url"
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://yourrestaurant.com/menu"
-                  className="flex-1 px-4 py-2 border rounded-lg"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      addKnowledgeUrl()
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={addKnowledgeUrl}
-                  disabled={!newUrl || knowledgeUrls.length >= 20}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-                >
-                  Add URL
-                </button>
-              </div>
-
-              {/* URL List */}
-              <div className="space-y-2 mb-4">
-                {knowledgeUrls.map((url, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-700 truncate flex-1">{url}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeKnowledgeUrl(index)}
-                      className="ml-2 p-1 text-red-500 hover:bg-red-50 rounded"
-                    >
-                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {knowledgeUrls.length === 0 && (
-                <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-lg">
-                  No websites added yet. Add URLs above to teach the AI about your business.
-                </div>
-              )}
-
-              {knowledgeUrls.length > 0 && (
-                <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">{knowledgeUrls.length} / 20 websites added</p>
-                    <p className="text-xs text-blue-700">Click "Refresh Knowledge" to fetch latest content from websites</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={refreshKnowledgeBase}
-                    disabled={saving}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
-                  >
-                    {saving ? 'Fetching...' : 'Refresh Knowledge'}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save AI Settings'}
             </button>
           </form>
         )}
