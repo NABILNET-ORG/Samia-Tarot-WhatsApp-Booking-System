@@ -205,9 +205,22 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                     Search Messages
                   </button>
                   <button
-                    onClick={() => {
-                      // TODO: Export chat functionality
-                      alert('Export chat feature coming soon!')
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/conversations/${conversationId}/export?format=text`)
+                        const text = await response.text()
+                        const blob = new Blob([text], { type: 'text/plain' })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `conversation-${conversation?.phone}-${Date.now()}.txt`
+                        document.body.appendChild(a)
+                        a.click()
+                        document.body.removeChild(a)
+                        URL.revokeObjectURL(url)
+                      } catch (error) {
+                        alert('Failed to export chat')
+                      }
                       setShowMenu(false)
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
@@ -216,10 +229,22 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                   </button>
                   <div className="border-t border-gray-200 my-1"></div>
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to clear this conversation?')) {
-                        // TODO: Clear conversation functionality
-                        alert('Clear conversation feature coming soon!')
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to clear this conversation? All messages will be deleted.')) {
+                        try {
+                          const response = await fetch(`/api/conversations/${conversationId}/clear`, {
+                            method: 'DELETE'
+                          })
+                          if (response.ok) {
+                            setMessages([])
+                            alert('Conversation cleared successfully!')
+                            loadConversation()
+                          } else {
+                            alert('Failed to clear conversation')
+                          }
+                        } catch (error) {
+                          alert('Error clearing conversation')
+                        }
                       }
                       setShowMenu(false)
                     }}
