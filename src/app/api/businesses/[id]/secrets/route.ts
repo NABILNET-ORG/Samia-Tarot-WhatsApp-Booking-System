@@ -21,7 +21,7 @@ export async function GET(
 ) {
   return requirePermission(request, 'settings', 'read', async (context) => {
     // Only Admin and Owner roles can view secrets
-    const isAdmin = context.employee.role.name === 'Admin' || context.employee.role.name === 'Owner'
+    const isAdmin = context.employee.role_name === 'Admin' || context.employee.role_name === 'Owner'
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
@@ -78,7 +78,7 @@ export async function PATCH(
 ) {
   return requirePermission(request, 'settings', 'write', async (context) => {
     // Only Admin and Owner roles can update secrets
-    const isAdmin = context.employee.role.name === 'Admin' || context.employee.role.name === 'Owner'
+    const isAdmin = context.employee.role_name === 'Admin' || context.employee.role_name === 'Owner'
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
