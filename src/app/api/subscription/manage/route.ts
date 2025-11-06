@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireBusinessContext } from "@/lib/multi-tenant/middleware"
 import Stripe from "stripe"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2024-11-20.acacia" })
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2023-10-16" })
 
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
