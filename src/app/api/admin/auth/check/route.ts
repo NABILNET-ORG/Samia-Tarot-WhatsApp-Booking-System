@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEmployeeFromSession } from '@/lib/auth/session'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(request: NextRequest) {
   try {
     // Check if employee is authenticated

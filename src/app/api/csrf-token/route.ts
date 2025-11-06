@@ -6,6 +6,9 @@
 import { NextResponse } from 'next/server'
 import { setCSRFToken, getCSRFToken } from '@/lib/security/csrf'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 /**
  * GET /api/csrf-token
  * Returns CSRF token (creates one if doesn't exist)
