@@ -12,11 +12,11 @@
 
 **Goal:** 85% → 92% completion
 
-### Day 1-2: Templates & Canned Responses CRUD
-- API: PATCH/DELETE `/api/templates/[id]`
-- API: PATCH/DELETE `/api/canned-responses/[id]`
-- UI: Edit/delete modals in templates page
-- Confirmation dialogs for deletion
+### Day 1-2: Templates & Canned Responses CRUD ✅ COMPLETE
+- ✅ API: PATCH/DELETE `/api/templates/[id]`
+- ✅ API: PATCH/DELETE `/api/canned-responses/[id]`
+- ✅ UI: Edit/delete modals in templates page
+- ✅ Confirmation dialogs for deletion
 
 ### Day 3: Roles Management
 - API: POST/PATCH/DELETE `/api/roles`
