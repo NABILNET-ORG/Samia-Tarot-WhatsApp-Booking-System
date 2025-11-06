@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 import { supabaseAdmin } from '@/lib/supabase/client'
-import { JSDOM } from 'jsdom'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -41,40 +40,38 @@ export async function POST(request: NextRequest) {
 
         const html = await response.text()
 
-        // Parse HTML and extract text
-        const dom = new JSDOM(html)
-        const document = dom.window.document
+        // Simple HTML parsing - extract text between tags
+        const title = html.match(/<title>(.*?)<\/title>/i)?.[1] || url
 
-        // Remove script and style elements
-        const scripts = document.querySelectorAll('script, style, nav, footer')
-        scripts.forEach(el => el.remove())
-
-        // Get title
-        const title = document.querySelector('title')?.textContent || url
-
-        // Get main content
-        const body = document.querySelector('body')
-        const content = body?.textContent || ''
-
-        // Clean up whitespace
-        const cleanContent = content
-          .replace(/\s+/g, ' ')
+        // Remove scripts, styles, and extract text
+        let content = html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ') // Remove HTML tags
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/\s+/g, ' ') // Clean whitespace
           .trim()
-          .substring(0, 10000) // Limit to 10K chars per URL
+          .substring(0, 10000) // Limit to 10K chars
+
+        const cleanContent = content
 
         // Save to database
         await supabaseAdmin
           .from('knowledge_base_content')
           .upsert({
             business_id: context.business.id,
-            url,
+            source_type: 'website',
+            source_url: url,
             title,
             content: cleanContent,
             fetched_at: new Date().toISOString(),
             last_updated: new Date().toISOString(),
             is_active: true
           }, {
-            onConflict: 'business_id,url'
+            onConflict: 'business_id,source_type,source_url'
           })
 
         results.push({ url, status: 'success', chars: cleanContent.length })
@@ -84,12 +81,15 @@ export async function POST(request: NextRequest) {
           .from('knowledge_base_content')
           .upsert({
             business_id: context.business.id,
-            url,
+            source_type: 'website',
+            source_url: url,
+            title: url,
+            content: '',
             fetch_error: error.message,
             fetched_at: new Date().toISOString(),
             is_active: false
           }, {
-            onConflict: 'business_id,url'
+            onConflict: 'business_id,source_type,source_url'
           })
 
         results.push({ url, status: 'error', error: error.message })
