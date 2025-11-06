@@ -58,14 +58,14 @@ export const EmployeeSchema = z.object({
   full_name: z.string().min(1).max(100).trim(),
   role_id: z.string().uuid(),
   temporary_password: z.string().min(12),
-  custom_permissions_json: z.record(z.any()).optional(),
+  custom_permissions_json: z.record(z.string(), z.any()).optional(),
 })
 
 export const UpdateEmployeeSchema = z.object({
   full_name: z.string().min(1).max(100).trim().optional(),
   role_id: z.string().uuid().optional(),
   is_active: z.boolean().optional(),
-  custom_permissions_json: z.record(z.any()).optional(),
+  custom_permissions_json: z.record(z.string(), z.any()).optional(),
 })
 
 // ==================== TEMPLATE SCHEMAS ====================
