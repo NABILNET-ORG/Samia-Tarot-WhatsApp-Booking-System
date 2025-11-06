@@ -21,9 +21,22 @@ export async function GET(
 ) {
   return requirePermission(request, 'settings', 'read', async (context) => {
     // Only Admin and Owner roles can view secrets
-    const isAdmin = context.employee.role_name === 'Admin' || context.employee.role_name === 'Owner'
+    console.log('🔐 Secrets access attempt:', {
+      employee: context.employee.email,
+      role: context.employee.role_name,
+      permissions: context.employee.permissions
+    })
+
+    const isAdmin = context.employee.role_name === 'Admin' ||
+                    context.employee.role_name === 'Owner' ||
+                    context.employee.permissions?.settings?.write === true
+
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden: Admin access required',
+        your_role: context.employee.role_name,
+        required_roles: ['Admin', 'Owner']
+      }, { status: 403 })
     }
 
     const { data: business, error } = await supabaseAdmin
@@ -79,9 +92,22 @@ export async function PATCH(
 ) {
   return requirePermission(request, 'settings', 'write', async (context) => {
     // Only Admin and Owner roles can update secrets
-    const isAdmin = context.employee.role_name === 'Admin' || context.employee.role_name === 'Owner'
+    console.log('🔐 Secrets update attempt:', {
+      employee: context.employee.email,
+      role: context.employee.role_name,
+      permissions: context.employee.permissions
+    })
+
+    const isAdmin = context.employee.role_name === 'Admin' ||
+                    context.employee.role_name === 'Owner' ||
+                    context.employee.permissions?.settings?.write === true
+
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
+      return NextResponse.json({
+        error: 'Forbidden: Admin access required',
+        your_role: context.employee.role_name,
+        required_roles: ['Admin', 'Owner']
+      }, { status: 403 })
     }
 
     const body = await request.json()

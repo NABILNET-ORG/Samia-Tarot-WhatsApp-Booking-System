@@ -121,8 +121,8 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* Header - WhatsApp Style */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      {/* Header - WhatsApp Style - STICKY */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Back Button (Mobile Only) */}
           {isMobile && onBack && (
