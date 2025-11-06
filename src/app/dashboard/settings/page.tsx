@@ -11,7 +11,8 @@ import { useBusinessContext } from '@/lib/multi-tenant/context'
 type Tab = 'overview' | 'general' | 'secrets' | 'ai' | 'integrations'
 
 export default function SettingsPage() {
-  const { business, employee, refetch } = useBusinessContext()
+  const { business: businessData, employee, refetch } = useBusinessContext()
+  const business = businessData as any // Type assertion for encrypted fields
   const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [settings, setSettings] = useState<any>({})
   const [secrets, setSecrets] = useState<any>({})
@@ -38,16 +39,15 @@ export default function SettingsPage() {
   }, [business])
 
   async function checkSystemStatus() {
-    const biz = business as any
     setSystemStatus({
-      openai: !!biz?.openai_api_key_encrypted,
-      meta: !!biz?.whatsapp_phone_number_id || !!biz?.meta_phone_id,
-      twilio: !!biz?.twilio_phone_number,
-      stripe: !!biz?.stripe_secret_key_encrypted,
-      google: !!biz?.google_client_id_encrypted,
+      openai: !!business?.openai_api_key_encrypted,
+      meta: !!business?.whatsapp_phone_number_id || !!business?.meta_phone_id,
+      twilio: !!business?.twilio_phone_number,
+      stripe: !!business?.stripe_secret_key_encrypted,
+      google: !!business?.google_client_id_encrypted,
       supabase: true
     })
-    setCurrentProvider(biz?.whatsapp_provider || 'meta')
+    setCurrentProvider(business?.whatsapp_provider || 'meta')
   }
 
   async function loadSettings() {
