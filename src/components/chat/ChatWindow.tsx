@@ -8,7 +8,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { MessageBubble } from './MessageBubble'
 import { MessageComposer } from './MessageComposer'
-import { TakeOverButton } from './TakeOverButton'
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
 
@@ -161,9 +160,34 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
           </button>
         </div>
 
-        {/* Right Actions (Desktop Only) */}
-        {!isMobile && (
-          <div className="flex items-center gap-2">
+        {/* Right Actions */}
+        <div className="flex items-center gap-2">
+          {/* Take Over Button - In Header */}
+          {conversation && conversation.mode === 'ai' && (
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(`/api/conversations/takeover`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversation_id: conversationId })
+                  })
+                  if (response.ok) {
+                    handleTakeOver()
+                  }
+                } catch (error) {
+                  console.error('Failed to take over:', error)
+                }
+              }}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              title="Take over from AI"
+            >
+              Take Over
+            </button>
+          )}
+
+          {/* Search Button */}
+          {!isMobile && (
             <button
               onClick={() => setShowSearch(!showSearch)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -173,6 +197,10 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
+          )}
+
+          {/* Menu Button */}
+          {!isMobile && (
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
@@ -255,8 +283,8 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Search Bar (appears when search is active) */}
@@ -291,16 +319,6 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {/* Take Over Button */}
-        {conversation && (
-          <TakeOverButton
-            conversationId={conversationId}
-            currentMode={conversation.mode}
-            assignedTo={conversation.assigned_employee_name}
-            onTakeOver={handleTakeOver}
-          />
-        )}
-
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
