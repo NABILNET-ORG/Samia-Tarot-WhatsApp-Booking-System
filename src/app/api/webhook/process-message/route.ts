@@ -129,14 +129,25 @@ export async function POST(request: NextRequest) {
     await sendWhatsAppMessage(business_id, phone, aiResponse.message)
 
     // Handle actions
-    if (aiResponse.actions?.createBooking) {
-      // TODO: Create booking in database
-      console.log('Action: Create booking for conversation', conversation.id)
+    if (aiResponse.actions?.createBooking && aiResponse.actions.createBooking.service_id) {
+      const booking = aiResponse.actions.createBooking
+      await supabaseAdmin.from('bookings').insert({
+        business_id,
+        customer_phone: phone,
+        service_id: booking.service_id,
+        scheduled_at: booking.scheduled_at || new Date().toISOString(),
+        status: 'pending',
+        payment_status: 'pending',
+        booking_source: 'whatsapp_ai'
+      })
+      console.log('✅ Booking created for conversation', conversation.id)
     }
 
-    if (aiResponse.actions?.requestPayment) {
-      // TODO: Send payment link
-      console.log('Action: Request payment for conversation', conversation.id)
+    if (aiResponse.actions?.requestPayment && aiResponse.actions.requestPayment.service_id) {
+      const payment = aiResponse.actions.requestPayment
+      const paymentLink = `${process.env.NEXT_PUBLIC_BASE_URL}/payment?service=${payment.service_id}&phone=${encodeURIComponent(phone)}`
+      await sendWhatsAppMessage(business_id, phone, `💳 Payment link: ${paymentLink}`)
+      console.log('✅ Payment link sent for conversation', conversation.id)
     }
 
     return NextResponse.json({

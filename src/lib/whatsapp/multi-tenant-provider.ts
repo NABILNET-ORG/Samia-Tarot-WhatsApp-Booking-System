@@ -52,21 +52,38 @@ export async function getWhatsAppProviderForBusiness(
   const providerType = business.whatsapp_provider || 'meta'
 
   if (providerType === 'meta') {
-    // Decrypt Meta credentials
-    const accessToken = business.meta_access_token_encrypted
-      ? decryptApiKey(business.meta_access_token_encrypted, businessId)
-      : process.env.META_WHATSAPP_TOKEN || ''
+    // Decrypt Meta credentials (with fallback to env vars)
+    let accessToken = ''
+    let appSecret = ''
+    let verifyToken = ''
 
-    const appSecret = business.meta_app_secret_encrypted
-      ? decryptApiKey(business.meta_app_secret_encrypted, businessId)
-      : process.env.META_APP_SECRET
+    try {
+      accessToken = business.meta_access_token_encrypted
+        ? decryptApiKey(business.meta_access_token_encrypted, businessId)
+        : process.env.META_WHATSAPP_TOKEN || ''
+
+      appSecret = business.meta_app_secret_encrypted
+        ? decryptApiKey(business.meta_app_secret_encrypted, businessId)
+        : process.env.META_APP_SECRET || ''
+
+      verifyToken = business.meta_verify_token_encrypted
+        ? decryptApiKey(business.meta_verify_token_encrypted, businessId)
+        : process.env.META_WHATSAPP_VERIFY_TOKEN || ''
+    } catch (error) {
+      console.warn('Failed to decrypt Meta credentials, using env vars fallback:', error)
+      accessToken = process.env.META_WHATSAPP_TOKEN || ''
+      appSecret = process.env.META_APP_SECRET || ''
+      verifyToken = process.env.META_WHATSAPP_VERIFY_TOKEN || ''
+    }
 
     const metaConfig: MetaConfig = {
-      phoneNumberId: business.meta_phone_number_id || process.env.META_WHATSAPP_PHONE_ID || '',
+      phoneNumberId: business.whatsapp_phone_number_id || business.meta_phone_id || process.env.META_WHATSAPP_PHONE_ID || '',
       accessToken,
-      verifyToken: business.meta_verify_token || process.env.META_WHATSAPP_VERIFY_TOKEN || '',
-      appSecret: appSecret || '',
+      verifyToken,
+      appSecret,
     }
+
+    console.log('🔧 Meta config:', { phoneNumberId: metaConfig.phoneNumberId, hasToken: !!metaConfig.accessToken })
 
     const provider = new MetaWhatsAppProvider(metaConfig)
     providerCache.set(businessId, provider)
@@ -116,16 +133,24 @@ export async function sendWhatsAppMessage(
     mediaType?: 'image' | 'video' | 'audio' | 'document'
   }
 ): Promise<{ messageId: string; status: string }> {
-  const provider = await getWhatsAppProviderForBusiness(businessId)
+  try {
+    console.log(`📤 Sending WhatsApp message to ${to} via business ${businessId}`)
+    const provider = await getWhatsAppProviderForBusiness(businessId)
 
-  const result = await provider.sendMessage({
-    to,
-    body: message,
-    mediaUrl: options?.mediaUrl,
-  })
+    const result = await provider.sendMessage({
+      to,
+      body: message,
+      mediaUrl: options?.mediaUrl,
+    })
 
-  return {
-    messageId: result.messageId,
-    status: result.success ? 'sent' : 'failed',
+    console.log(`✅ WhatsApp message sent: ${result.messageId}`)
+
+    return {
+      messageId: result.messageId,
+      status: result.success ? 'sent' : 'failed',
+    }
+  } catch (error: any) {
+    console.error('❌ Failed to send WhatsApp message:', error)
+    throw error
   }
 }
