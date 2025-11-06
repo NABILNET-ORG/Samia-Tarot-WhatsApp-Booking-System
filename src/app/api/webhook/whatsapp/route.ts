@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     let businessId: string | null = null
 
     // For Meta webhooks, extract phone_number_id for accurate routing
-    if (provider.getName() === 'Meta WhatsApp Business') {
+    if (provider.getName() === 'meta') {
       try {
         const phoneNumberId = body?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id
         if (phoneNumberId) {
