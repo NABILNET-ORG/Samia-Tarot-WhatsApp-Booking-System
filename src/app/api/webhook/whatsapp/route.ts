@@ -82,13 +82,34 @@ export async function POST(request: NextRequest) {
     console.log(`💬 Message from ${from}: "${messageBody}"`)
 
     // Find which business this message belongs to
-    const { findBusinessByPhone } = await import('@/lib/business/lookup')
-    const businessId = await findBusinessByPhone(from)
+    const { findBusinessByPhone, findBusinessByPhoneId } = await import('@/lib/business/lookup')
+
+    let businessId: string | null = null
+
+    // For Meta webhooks, extract phone_number_id for accurate routing
+    if (provider.getName() === 'Meta WhatsApp Business') {
+      try {
+        const phoneNumberId = body?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id
+        if (phoneNumberId) {
+          console.log(`📱 Meta phone number ID: ${phoneNumberId}`)
+          businessId = await findBusinessByPhoneId(phoneNumberId)
+        }
+      } catch (error) {
+        console.warn('⚠️  Could not extract Meta phone number ID, falling back to phone lookup')
+      }
+    }
+
+    // Fallback: lookup by customer phone number (Twilio or Meta without phone ID)
+    if (!businessId) {
+      businessId = await findBusinessByPhone(from)
+    }
 
     if (!businessId) {
       console.error('❌ No business found for phone:', from)
       return NextResponse.json({ error: 'Business not found' }, { status: 404 })
     }
+
+    console.log(`✅ Routing message to business ID: ${businessId}`)
 
     // Process message with AI engine (multi-tenant)
     const processResponse = await fetch(`${request.nextUrl.origin}/api/webhook/process-message`, {

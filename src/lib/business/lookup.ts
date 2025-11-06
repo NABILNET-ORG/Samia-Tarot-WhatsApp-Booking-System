@@ -6,7 +6,7 @@
 import { supabaseAdmin } from '@/lib/supabase/client'
 
 /**
- * Find business by WhatsApp phone number
+ * Find business by WhatsApp phone number or phone ID
  * Used by webhook to route incoming messages to correct business
  */
 export async function findBusinessByPhone(phoneNumber: string): Promise<string | null> {
@@ -14,34 +14,37 @@ export async function findBusinessByPhone(phoneNumber: string): Promise<string |
     // Normalize phone number (remove non-digits)
     const normalized = phoneNumber.replace(/\D/g, '')
 
-    // Try exact match first
+    // Try Twilio phone number match
     let { data: business } = await supabaseAdmin
       .from('businesses')
       .select('id')
-      .eq('whatsapp_number', phoneNumber)
+      .eq('twilio_phone_number', phoneNumber)
       .eq('is_active', true)
       .single()
 
     if (business) {
+      console.log('✅ Found business by Twilio phone number')
       return business.id
     }
 
-    // Try normalized match
+    // Try normalized phone match
     const { data: businesses } = await supabaseAdmin
       .from('businesses')
-      .select('id, whatsapp_number')
+      .select('id, twilio_phone_number')
       .eq('is_active', true)
 
     if (businesses) {
       for (const biz of businesses) {
-        const bizNormalized = biz.whatsapp_number?.replace(/\D/g, '') || ''
+        const bizNormalized = biz.twilio_phone_number?.replace(/\D/g, '') || ''
         if (bizNormalized === normalized) {
+          console.log('✅ Found business by normalized phone number')
           return biz.id
         }
       }
     }
 
-    // Default to first business (for single-tenant compatibility)
+    // Default to first business (backward compatibility)
+    console.warn('⚠️  No business matched phone number, using first active business')
     const { data: firstBusiness } = await supabaseAdmin
       .from('businesses')
       .select('id')
@@ -52,6 +55,40 @@ export async function findBusinessByPhone(phoneNumber: string): Promise<string |
     return firstBusiness?.id || null
   } catch (error) {
     console.error('Business lookup error:', error)
+    return null
+  }
+}
+
+/**
+ * Find business by Meta WhatsApp Phone Number ID
+ * Used by Meta webhook to route messages
+ */
+export async function findBusinessByPhoneId(phoneNumberId: string): Promise<string | null> {
+  try {
+    const { data: business } = await supabaseAdmin
+      .from('businesses')
+      .select('id')
+      .eq('whatsapp_phone_number_id', phoneNumberId)
+      .eq('is_active', true)
+      .single()
+
+    if (business) {
+      console.log('✅ Found business by Meta phone number ID')
+      return business.id
+    }
+
+    // Fallback to first business
+    console.warn('⚠️  No business matched phone ID, using first active business')
+    const { data: firstBusiness } = await supabaseAdmin
+      .from('businesses')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1)
+      .single()
+
+    return firstBusiness?.id || null
+  } catch (error) {
+    console.error('Business lookup by phone ID error:', error)
     return null
   }
 }

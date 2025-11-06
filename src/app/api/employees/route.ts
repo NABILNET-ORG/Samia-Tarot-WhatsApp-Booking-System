@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
 import { hashPassword } from '@/lib/auth/session'
+import { validatePassword } from '@/lib/validation/password'
 
 /**
  * GET /api/employees - List employees in business
@@ -73,6 +74,27 @@ export async function POST(request: NextRequest) {
       if (!email || !full_name || !role_id || !temporary_password) {
         return NextResponse.json(
           { error: 'Missing required fields: email, full_name, role_id, temporary_password' },
+          { status: 400 }
+        )
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return NextResponse.json(
+          { error: 'Invalid email format' },
+          { status: 400 }
+        )
+      }
+
+      // Validate password complexity
+      const passwordValidation = validatePassword(temporary_password)
+      if (!passwordValidation.valid) {
+        return NextResponse.json(
+          {
+            error: 'Password does not meet requirements',
+            details: passwordValidation.errors,
+          },
           { status: 400 }
         )
       }
