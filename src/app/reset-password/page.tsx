@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
 
   const strength = getPasswordStrength(newPassword)
   const strengthLabel = getPasswordStrengthLabel(strength)
-  const strengthColors = {
+  const strengthColors: Record<number, string> = {
     0: 'bg-red-500',
     1: 'bg-red-500',
     2: 'bg-yellow-500',
