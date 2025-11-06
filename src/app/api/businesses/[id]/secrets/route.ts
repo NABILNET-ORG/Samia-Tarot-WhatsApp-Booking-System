@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
-import { encrypt, decrypt } from '@/lib/security/encryption'
+import { encryptApiKey, decryptApiKey } from '@/lib/encryption/keys'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -37,30 +37,31 @@ export async function GET(
     }
 
     // Decrypt secrets before sending to frontend
+    const businessId = params.id
     const secrets = {
       // OpenAI
-      openai_api_key: business.openai_api_key_encrypted ? decrypt(business.openai_api_key_encrypted) : '',
+      openai_api_key: business.openai_api_key_encrypted ? decryptApiKey(business.openai_api_key_encrypted, businessId) : '',
 
       // Meta WhatsApp
       meta_phone_id: business.meta_phone_id || '',
-      meta_access_token: business.meta_access_token_encrypted ? decrypt(business.meta_access_token_encrypted) : '',
-      meta_app_secret: business.meta_app_secret_encrypted ? decrypt(business.meta_app_secret_encrypted) : '',
-      meta_verify_token: business.meta_verify_token_encrypted ? decrypt(business.meta_verify_token_encrypted) : '',
+      meta_access_token: business.meta_access_token_encrypted ? decryptApiKey(business.meta_access_token_encrypted, businessId) : '',
+      meta_app_secret: business.meta_app_secret_encrypted ? decryptApiKey(business.meta_app_secret_encrypted, businessId) : '',
+      meta_verify_token: business.meta_verify_token_encrypted ? decryptApiKey(business.meta_verify_token_encrypted, businessId) : '',
 
       // Twilio
-      twilio_account_sid: business.twilio_account_sid_encrypted ? decrypt(business.twilio_account_sid_encrypted) : '',
-      twilio_auth_token: business.twilio_auth_token_encrypted ? decrypt(business.twilio_auth_token_encrypted) : '',
+      twilio_account_sid: business.twilio_account_sid_encrypted ? decryptApiKey(business.twilio_account_sid_encrypted, businessId) : '',
+      twilio_auth_token: business.twilio_auth_token_encrypted ? decryptApiKey(business.twilio_auth_token_encrypted, businessId) : '',
       twilio_whatsapp_number: business.twilio_whatsapp_number || '',
 
       // Stripe
-      stripe_secret_key: business.stripe_secret_key_encrypted ? decrypt(business.stripe_secret_key_encrypted) : '',
+      stripe_secret_key: business.stripe_secret_key_encrypted ? decryptApiKey(business.stripe_secret_key_encrypted, businessId) : '',
       stripe_publishable_key: business.stripe_publishable_key || '',
-      stripe_webhook_secret: business.stripe_webhook_secret_encrypted ? decrypt(business.stripe_webhook_secret_encrypted) : '',
+      stripe_webhook_secret: business.stripe_webhook_secret_encrypted ? decryptApiKey(business.stripe_webhook_secret_encrypted, businessId) : '',
 
       // Google
-      google_client_id: business.google_client_id_encrypted ? decrypt(business.google_client_id_encrypted) : '',
-      google_client_secret: business.google_client_secret_encrypted ? decrypt(business.google_client_secret_encrypted) : '',
-      google_refresh_token: business.google_refresh_token_encrypted ? decrypt(business.google_refresh_token_encrypted) : '',
+      google_client_id: business.google_client_id_encrypted ? decryptApiKey(business.google_client_id_encrypted, businessId) : '',
+      google_client_secret: business.google_client_secret_encrypted ? decryptApiKey(business.google_client_secret_encrypted, businessId) : '',
+      google_refresh_token: business.google_refresh_token_encrypted ? decryptApiKey(business.google_refresh_token_encrypted, businessId) : '',
       google_calendar_id: business.google_calendar_id || '',
     }
 
@@ -84,36 +85,37 @@ export async function PATCH(
     }
 
     const body = await request.json()
+    const businessId = params.id
 
     // Encrypt all secrets before storing
     const updates: any = {}
 
     // OpenAI
-    if (body.openai_api_key) updates.openai_api_key_encrypted = encrypt(body.openai_api_key)
+    if (body.openai_api_key) updates.openai_api_key_encrypted = encryptApiKey(body.openai_api_key, businessId)
 
     // Meta WhatsApp
     if (body.meta_phone_id) updates.meta_phone_id = body.meta_phone_id
-    if (body.meta_access_token) updates.meta_access_token_encrypted = encrypt(body.meta_access_token)
-    if (body.meta_app_secret) updates.meta_app_secret_encrypted = encrypt(body.meta_app_secret)
-    if (body.meta_verify_token) updates.meta_verify_token_encrypted = encrypt(body.meta_verify_token)
+    if (body.meta_access_token) updates.meta_access_token_encrypted = encryptApiKey(body.meta_access_token, businessId)
+    if (body.meta_app_secret) updates.meta_app_secret_encrypted = encryptApiKey(body.meta_app_secret, businessId)
+    if (body.meta_verify_token) updates.meta_verify_token_encrypted = encryptApiKey(body.meta_verify_token, businessId)
 
     // Also update whatsapp_phone_number_id for webhook routing
     if (body.meta_phone_id) updates.whatsapp_phone_number_id = body.meta_phone_id
 
     // Twilio
-    if (body.twilio_account_sid) updates.twilio_account_sid_encrypted = encrypt(body.twilio_account_sid)
-    if (body.twilio_auth_token) updates.twilio_auth_token_encrypted = encrypt(body.twilio_auth_token)
+    if (body.twilio_account_sid) updates.twilio_account_sid_encrypted = encryptApiKey(body.twilio_account_sid, businessId)
+    if (body.twilio_auth_token) updates.twilio_auth_token_encrypted = encryptApiKey(body.twilio_auth_token, businessId)
     if (body.twilio_whatsapp_number) updates.twilio_whatsapp_number = body.twilio_whatsapp_number
 
     // Stripe
-    if (body.stripe_secret_key) updates.stripe_secret_key_encrypted = encrypt(body.stripe_secret_key)
+    if (body.stripe_secret_key) updates.stripe_secret_key_encrypted = encryptApiKey(body.stripe_secret_key, businessId)
     if (body.stripe_publishable_key) updates.stripe_publishable_key = body.stripe_publishable_key
-    if (body.stripe_webhook_secret) updates.stripe_webhook_secret_encrypted = encrypt(body.stripe_webhook_secret)
+    if (body.stripe_webhook_secret) updates.stripe_webhook_secret_encrypted = encryptApiKey(body.stripe_webhook_secret, businessId)
 
     // Google
-    if (body.google_client_id) updates.google_client_id_encrypted = encrypt(body.google_client_id)
-    if (body.google_client_secret) updates.google_client_secret_encrypted = encrypt(body.google_client_secret)
-    if (body.google_refresh_token) updates.google_refresh_token_encrypted = encrypt(body.google_refresh_token)
+    if (body.google_client_id) updates.google_client_id_encrypted = encryptApiKey(body.google_client_id, businessId)
+    if (body.google_client_secret) updates.google_client_secret_encrypted = encryptApiKey(body.google_client_secret, businessId)
+    if (body.google_refresh_token) updates.google_refresh_token_encrypted = encryptApiKey(body.google_refresh_token, businessId)
     if (body.google_calendar_id) updates.google_calendar_id = body.google_calendar_id
 
     // Update database
