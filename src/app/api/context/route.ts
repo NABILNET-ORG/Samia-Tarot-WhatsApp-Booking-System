@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireBusinessContext } from "@/lib/multi-tenant/middleware"
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 /**
  * GET /api/context - Get current business context
  */

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 import { supabaseAdmin } from '@/lib/supabase/client'
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
