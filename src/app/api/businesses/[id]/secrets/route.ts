@@ -27,7 +27,8 @@ export async function GET(
       permissions: context.employee.permissions
     })
 
-    const isAdmin = context.employee.role_name === 'Admin' ||
+    const isAdmin = context.employee.role_name === 'admin' ||
+                    context.employee.role_name === 'Admin' || context.employee.role_name === 'admin' ||
                     context.employee.role_name === 'Owner' ||
                     context.employee.permissions?.settings?.write === true
 
@@ -98,7 +99,8 @@ export async function PATCH(
       permissions: context.employee.permissions
     })
 
-    const isAdmin = context.employee.role_name === 'Admin' ||
+    const isAdmin = context.employee.role_name === 'admin' ||
+                    context.employee.role_name === 'Admin' || context.employee.role_name === 'admin' ||
                     context.employee.role_name === 'Owner' ||
                     context.employee.permissions?.settings?.write === true
 
