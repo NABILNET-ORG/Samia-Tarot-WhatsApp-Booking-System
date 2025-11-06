@@ -193,7 +193,7 @@ export async function DELETE(
       if (employeeError) throw employeeError
 
       if (employees && employees.length > 0) {
-        const employeeNames = employees.map(e => e.full_name).join(', ')
+        const employeeNames = employees.map((e: any) => e.full_name).join(', ')
         return NextResponse.json(
           {
             error: `Cannot delete role "${role.name}" because it is assigned to ${employees.length} employee(s): ${employeeNames}${employees.length > 5 ? ' and others' : ''}`,
