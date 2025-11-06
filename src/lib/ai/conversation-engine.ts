@@ -87,8 +87,26 @@ export async function processMessageWithAI(
     .eq('is_active', true)
     .single()
 
-  // Build system prompt
-  const systemPrompt = template?.content || getDefaultPrompt(currentState, business, services || [])
+  // Load knowledge base content
+  const { data: knowledgeBase } = await supabaseAdmin
+    .from('knowledge_base_content')
+    .select('url, title, content')
+    .eq('business_id', businessId)
+    .eq('is_active', true)
+    .limit(20)
+
+  // Build knowledge base context
+  let knowledgeContext = ''
+  if (knowledgeBase && knowledgeBase.length > 0) {
+    knowledgeContext = '\n\n## Business Knowledge Base:\n' +
+      knowledgeBase.map((kb: any) =>
+        `### ${kb.title || kb.url}\n${kb.content.substring(0, 2000)}`
+      ).join('\n\n')
+  }
+
+  // Build system prompt with knowledge base
+  const basePrompt = template?.content || getDefaultPrompt(currentState, business, services || [])
+  const systemPrompt = basePrompt + knowledgeContext
 
   // Build conversation history for context
   const messageHistory = conversation.message_history || []

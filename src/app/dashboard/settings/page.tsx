@@ -26,6 +26,8 @@ export default function SettingsPage() {
     supabase: false
   })
   const [currentProvider, setCurrentProvider] = useState<'meta' | 'twilio'>('meta')
+  const [knowledgeUrls, setKnowledgeUrls] = useState<string[]>([])
+  const [newUrl, setNewUrl] = useState('')
 
   // Check if current user is Admin
   const isAdmin = employee?.role_name === 'Admin' || employee?.role_name === 'Owner'
@@ -55,8 +57,54 @@ export default function SettingsPage() {
       const response = await fetch('/api/settings')
       const data = await response.json()
       if (data.settings) setSettings(data.settings)
+
+      // Load knowledge base URLs
+      if (business?.knowledge_base_urls) {
+        setKnowledgeUrls(business.knowledge_base_urls)
+      }
     } catch (error) {
       console.error(error)
+    }
+  }
+
+  function addKnowledgeUrl() {
+    if (newUrl && knowledgeUrls.length < 20) {
+      try {
+        new URL(newUrl) // Validate URL format
+        setKnowledgeUrls([...knowledgeUrls, newUrl])
+        setNewUrl('')
+        setSettings({...settings, knowledge_base_urls: [...knowledgeUrls, newUrl]})
+      } catch {
+        alert('Invalid URL format')
+      }
+    } else if (knowledgeUrls.length >= 20) {
+      alert('Maximum 20 websites allowed')
+    }
+  }
+
+  function removeKnowledgeUrl(index: number) {
+    const updated = knowledgeUrls.filter((_, i) => i !== index)
+    setKnowledgeUrls(updated)
+    setSettings({...settings, knowledge_base_urls: updated})
+  }
+
+  async function refreshKnowledgeBase() {
+    try {
+      setSaving(true)
+      const response = await fetch('/api/knowledge-base/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls: knowledgeUrls })
+      })
+      if (response.ok) {
+        alert('Knowledge base refreshed successfully!')
+      } else {
+        alert('Failed to refresh knowledge base')
+      }
+    } catch (error) {
+      alert('Error refreshing knowledge base')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -607,6 +655,77 @@ export default function SettingsPage() {
                   <p className="text-xs text-gray-500 mt-1">Number of previous messages AI remembers</p>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">📚 Knowledge Base (RAG)</h2>
+              <p className="text-sm text-gray-600 mb-4">Add up to 20 website URLs. The AI will fetch content from these websites to answer business-specific questions.</p>
+
+              {/* Add URL Input */}
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="url"
+                  value={newUrl}
+                  onChange={(e) => setNewUrl(e.target.value)}
+                  placeholder="https://yourrestaurant.com/menu"
+                  className="flex-1 px-4 py-2 border rounded-lg"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addKnowledgeUrl()
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={addKnowledgeUrl}
+                  disabled={!newUrl || knowledgeUrls.length >= 20}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                >
+                  Add URL
+                </button>
+              </div>
+
+              {/* URL List */}
+              <div className="space-y-2 mb-4">
+                {knowledgeUrls.map((url, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-700 truncate flex-1">{url}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeKnowledgeUrl(index)}
+                      className="ml-2 p-1 text-red-500 hover:bg-red-50 rounded"
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {knowledgeUrls.length === 0 && (
+                <div className="text-center py-8 text-gray-400 border-2 border-dashed rounded-lg">
+                  No websites added yet. Add URLs above to teach the AI about your business.
+                </div>
+              )}
+
+              {knowledgeUrls.length > 0 && (
+                <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">{knowledgeUrls.length} / 20 websites added</p>
+                    <p className="text-xs text-blue-700">Click "Refresh Knowledge" to fetch latest content from websites</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={refreshKnowledgeBase}
+                    disabled={saving}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+                  >
+                    {saving ? 'Fetching...' : 'Refresh Knowledge'}
+                  </button>
+                </div>
+              )}
             </div>
 
             <button
