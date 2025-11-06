@@ -27,7 +27,7 @@ export default function SettingsPage() {
   const [currentProvider, setCurrentProvider] = useState<'meta' | 'twilio'>('meta')
 
   // Check if current user is Admin
-  const isAdmin = employee?.role?.name === 'Admin' || employee?.role?.name === 'Owner'
+  const isAdmin = employee?.role_name === 'Admin' || employee?.role_name === 'Owner'
 
   useEffect(() => {
     if (business) {
@@ -625,7 +625,7 @@ export default function SettingsPage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <h2 className="text-xl font-bold text-red-900 mb-2">🔐 Access Denied</h2>
             <p className="text-red-700">Only Admin and Owner roles can access the Secrets tab.</p>
-            <p className="text-sm text-red-600 mt-2">Your role: {employee?.role?.name}</p>
+            <p className="text-sm text-red-600 mt-2">Your role: {employee?.role_name}</p>
           </div>
         )}
       </div>
