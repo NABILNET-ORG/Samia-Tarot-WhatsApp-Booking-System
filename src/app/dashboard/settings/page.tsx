@@ -1,5 +1,6 @@
 /**
- * ⚙️ Business Settings Page
+ * ⚙️ Business Settings Page - Complete v1+v2 Merge
+ * Includes System Status, Provider Switcher, Secrets Management
  */
 
 'use client'
@@ -7,9 +8,13 @@
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
 
+type Tab = 'overview' | 'general' | 'secrets' | 'ai' | 'integrations'
+
 export default function SettingsPage() {
-  const { business, refetch } = useBusinessContext()
+  const { business, employee, refetch } = useBusinessContext()
+  const [activeTab, setActiveTab] = useState<Tab>('overview')
   const [settings, setSettings] = useState<any>({})
+  const [secrets, setSecrets] = useState<any>({})
   const [saving, setSaving] = useState(false)
   const [systemStatus, setSystemStatus] = useState({
     openai: false,
@@ -21,47 +26,27 @@ export default function SettingsPage() {
   })
   const [currentProvider, setCurrentProvider] = useState<'meta' | 'twilio'>('meta')
 
+  // Check if current user is Admin
+  const isAdmin = employee?.role?.name === 'Admin' || employee?.role?.name === 'Owner'
+
   useEffect(() => {
     if (business) {
       loadSettings()
+      loadSecrets()
       checkSystemStatus()
     }
   }, [business])
 
   async function checkSystemStatus() {
-    // Check which services are configured by testing if env vars exist
     setSystemStatus({
-      openai: !!process.env.NEXT_PUBLIC_OPENAI_API_KEY || true, // Assume configured
-      meta: !!business?.whatsapp_phone_number_id,
+      openai: !!business?.openai_api_key_encrypted,
+      meta: !!business?.whatsapp_phone_number_id || !!business?.meta_phone_id,
       twilio: !!business?.twilio_phone_number,
-      stripe: !!business?.stripe_customer_id || true,
-      google: true, // Assume configured
-      supabase: true // Always configured
+      stripe: !!business?.stripe_secret_key_encrypted,
+      google: !!business?.google_client_id_encrypted,
+      supabase: true
     })
-
-    // Determine current provider from business settings
     setCurrentProvider(business?.whatsapp_provider || 'meta')
-  }
-
-  async function switchProvider(provider: 'meta' | 'twilio') {
-    try {
-      const response = await fetch('/api/admin/provider', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider }),
-      })
-
-      if (response.ok) {
-        setCurrentProvider(provider)
-        alert(`✅ Switched to ${provider === 'meta' ? 'Meta WhatsApp' : 'Twilio'}!`)
-        refetch()
-      } else {
-        alert('Failed to switch provider')
-      }
-    } catch (error) {
-      console.error(error)
-      alert('Error switching provider')
-    }
   }
 
   async function loadSettings() {
@@ -74,17 +59,26 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleSave(e: React.FormEvent) {
+  async function loadSecrets() {
+    if (!isAdmin) return
+    try {
+      const response = await fetch('/api/businesses/' + business?.id + '/secrets')
+      const data = await response.json()
+      if (data.secrets) setSecrets(data.secrets)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function handleSaveSettings(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-
     try {
       const response = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       })
-
       if (response.ok) {
         alert('Settings saved successfully!')
         refetch()
@@ -98,156 +92,560 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSaveSecrets(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const response = await fetch('/api/businesses/' + business?.id + '/secrets', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(secrets),
+      })
+      if (response.ok) {
+        alert('Secrets saved successfully!')
+        refetch()
+        checkSystemStatus()
+      } else {
+        alert('Failed to save secrets')
+      }
+    } catch (error) {
+      alert('Error saving secrets')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function switchProvider(provider: 'meta' | 'twilio') {
+    try {
+      const response = await fetch('/api/admin/provider', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider }),
+      })
+      if (response.ok) {
+        setCurrentProvider(provider)
+        alert(`✅ Switched to ${provider === 'meta' ? 'Meta WhatsApp' : 'Twilio'}!`)
+        refetch()
+      } else {
+        alert('Failed to switch provider')
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Error switching provider')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Business Settings</h1>
 
-        {/* System Status Section (from v1) */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            🔍 System Status
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            <StatusCard name="OpenAI (GPT-4)" status={systemStatus.openai} description="Required for AI conversations" />
-            <StatusCard name="Meta WhatsApp" status={systemStatus.meta} description="Official WhatsApp Business API" />
-            <StatusCard name="Twilio" status={systemStatus.twilio} description="Twilio WhatsApp API" />
-            <StatusCard name="Stripe" status={systemStatus.stripe} description="Payment processing" />
-            <StatusCard name="Google APIs" status={systemStatus.google} description="Calendar & Contacts" />
-            <StatusCard name="Supabase" status={systemStatus.supabase} description="Database (always configured)" />
-          </div>
+        {/* Tab Navigation */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="flex gap-4">
+            <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
+              🔍 Overview
+            </TabButton>
+            <TabButton active={activeTab === 'general'} onClick={() => setActiveTab('general')}>
+              ⚙️ General
+            </TabButton>
+            {isAdmin && (
+              <TabButton active={activeTab === 'secrets'} onClick={() => setActiveTab('secrets')}>
+                🔐 Secrets
+              </TabButton>
+            )}
+            <TabButton active={activeTab === 'ai'} onClick={() => setActiveTab('ai')}>
+              🤖 AI Config
+            </TabButton>
+            <TabButton active={activeTab === 'integrations'} onClick={() => setActiveTab('integrations')}>
+              🔌 Integrations
+            </TabButton>
+          </nav>
         </div>
 
-        {/* WhatsApp Provider Switcher (from v1) */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            📱 WhatsApp Provider
-          </h2>
-          <p className="text-gray-600 mb-4">Choose between Meta WhatsApp Business API or Twilio. You can switch anytime!</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <ProviderCard
-              name="Meta WhatsApp Business"
-              icon="📱"
-              active={currentProvider === 'meta'}
-              description="Official Meta platform with advanced features"
-              features={['Interactive messages', 'Message templates', 'Business verification', 'Free tier available']}
-              onClick={() => switchProvider('meta')}
-            />
-            <ProviderCard
-              name="Twilio"
-              icon="📞"
-              active={currentProvider === 'twilio'}
-              description="Easy setup with developer-friendly tools"
-              features={['Quick integration', 'Simple pricing', 'Great documentation', 'Instant sandbox']}
-              onClick={() => switchProvider('twilio')}
-            />
-          </div>
-        </div>
-
-        <form onSubmit={handleSave} className="space-y-6">
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-bold mb-4">General</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
-                <input
-                  type="text"
-                  value={settings.name || ''}
-                  onChange={(e) => setSettings({...settings, name: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-                <select
-                  value={settings.timezone || 'UTC'}
-                  onChange={(e) => setSettings({...settings, timezone: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">Eastern Time</option>
-                  <option value="America/Los_Angeles">Pacific Time</option>
-                  <option value="Europe/London">London</option>
-                  <option value="Asia/Beirut">Beirut</option>
-                </select>
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-8">
+            {/* System Status */}
+            <div>
+              <h2 className="text-2xl font-bold mb-4">🔍 System Status</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <StatusCard name="OpenAI (GPT-4)" status={systemStatus.openai} description="Required for AI conversations" />
+                <StatusCard name="Meta WhatsApp" status={systemStatus.meta} description="Official WhatsApp Business API" />
+                <StatusCard name="Twilio" status={systemStatus.twilio} description="Twilio WhatsApp API" />
+                <StatusCard name="Stripe" status={systemStatus.stripe} description="Payment processing" />
+                <StatusCard name="Google APIs" status={systemStatus.google} description="Calendar & Contacts" />
+                <StatusCard name="Supabase" status={systemStatus.supabase} description="Database (always configured)" />
               </div>
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-bold mb-4">AI Configuration</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
-                <select
-                  value={settings.ai_model || 'gpt-4'}
-                  onChange={(e) => setSettings({...settings, ai_model: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="gpt-4">GPT-4 (Best quality)</option>
-                  <option value="gpt-4-turbo">GPT-4 Turbo (Faster)</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Cheaper)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (0-1)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="1"
-                  value={settings.ai_temperature || 0.7}
-                  onChange={(e) => setSettings({...settings, ai_temperature: parseFloat(e.target.value)})}
-                  className="w-full px-4 py-2 border rounded-lg"
+            {/* WhatsApp Provider Switcher */}
+            <div>
+              <h2 className="text-2xl font-bold mb-4">📱 WhatsApp Provider</h2>
+              <p className="text-gray-600 mb-4">Choose between Meta WhatsApp Business API or Twilio. You can switch anytime!</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ProviderCard
+                  name="Meta WhatsApp Business"
+                  icon="📱"
+                  active={currentProvider === 'meta'}
+                  description="Official Meta platform with advanced features"
+                  features={['Interactive messages', 'Message templates', 'Business verification', 'Free tier available']}
+                  onClick={() => switchProvider('meta')}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens</label>
-                <input
-                  type="number"
-                  value={settings.ai_max_tokens || 700}
-                  onChange={(e) => setSettings({...settings, ai_max_tokens: parseInt(e.target.value)})}
-                  className="w-full px-4 py-2 border rounded-lg"
+                <ProviderCard
+                  name="Twilio"
+                  icon="📞"
+                  active={currentProvider === 'twilio'}
+                  description="Easy setup with developer-friendly tools"
+                  features={['Quick integration', 'Simple pricing', 'Great documentation', 'Instant sandbox']}
+                  onClick={() => switchProvider('twilio')}
                 />
               </div>
             </div>
           </div>
+        )}
 
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-xl font-bold mb-4">Branding</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
-                <input
-                  type="color"
-                  value={settings.primary_color || '#6B46C1'}
-                  onChange={(e) => setSettings({...settings, primary_color: e.target.value})}
-                  className="w-full h-12 border rounded-lg"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
-                <input
-                  type="url"
-                  value={settings.logo_url || ''}
-                  onChange={(e) => setSettings({...settings, logo_url: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="https://..."
-                />
+        {/* General Tab */}
+        {activeTab === 'general' && (
+          <form onSubmit={handleSaveSettings} className="space-y-6">
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">Business Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                  <input
+                    type="text"
+                    value={settings.name || business?.name || ''}
+                    onChange={(e) => setSettings({...settings, name: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                  <select
+                    value={settings.industry || business?.industry || 'other'}
+                    onChange={(e) => setSettings({...settings, industry: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  >
+                    <option value="tarot">Tarot & Spiritual</option>
+                    <option value="restaurant">Restaurant</option>
+                    <option value="clinic">Medical Clinic</option>
+                    <option value="salon">Beauty Salon</option>
+                    <option value="consultant">Consultant</option>
+                    <option value="fitness">Fitness</option>
+                    <option value="education">Education</option>
+                    <option value="ecommerce">E-commerce</option>
+                    <option value="real_estate">Real Estate</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                  <select
+                    value={settings.timezone || business?.timezone || 'UTC'}
+                    onChange={(e) => setSettings({...settings, timezone: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  >
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">Eastern Time</option>
+                    <option value="America/Los_Angeles">Pacific Time</option>
+                    <option value="Europe/London">London</option>
+                    <option value="Asia/Beirut">Beirut (Lebanon)</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Support Email</label>
+                    <input
+                      type="email"
+                      value={settings.support_email || business?.support_email || ''}
+                      onChange={(e) => setSettings({...settings, support_email: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="support@yourbusiness.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Support Phone</label>
+                    <input
+                      type="tel"
+                      value={settings.support_phone || business?.support_phone || ''}
+                      onChange={(e) => setSettings({...settings, support_phone: e.target.value})}
+                      className="w-full px-4 py-2 border rounded-lg"
+                      placeholder="+1234567890"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save Settings'}
-          </button>
-        </form>
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">Branding</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
+                  <input
+                    type="color"
+                    value={settings.primary_color || business?.primary_color || '#6B46C1'}
+                    onChange={(e) => setSettings({...settings, primary_color: e.target.value})}
+                    className="w-full h-12 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
+                  <input
+                    type="url"
+                    value={settings.logo_url || business?.logo_url || ''}
+                    onChange={(e) => setSettings({...settings, logo_url: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save General Settings'}
+            </button>
+          </form>
+        )}
+
+        {/* Secrets Tab - Admin Only */}
+        {activeTab === 'secrets' && isAdmin && (
+          <form onSubmit={handleSaveSecrets} className="space-y-6">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-yellow-800">
+                <strong>⚠️ Admin Only:</strong> These credentials are encrypted in the database. Only Admin and Owner roles can view and edit secrets.
+              </p>
+            </div>
+
+            {/* OpenAI */}
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">🤖 OpenAI Configuration</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    OpenAI API Key
+                    <a href="https://platform.openai.com/api-keys" target="_blank" className="ml-2 text-blue-500 text-xs">Get Key →</a>
+                  </label>
+                  <input
+                    type="password"
+                    value={secrets.openai_api_key || ''}
+                    onChange={(e) => setSecrets({...secrets, openai_api_key: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="sk-proj-..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Meta WhatsApp */}
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">📱 Meta WhatsApp Configuration</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number ID
+                    <a href="https://developers.facebook.com" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Meta →</a>
+                  </label>
+                  <input
+                    type="text"
+                    value={secrets.meta_phone_id || ''}
+                    onChange={(e) => setSecrets({...secrets, meta_phone_id: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="123456789012345"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Access Token (Permanent)</label>
+                  <input
+                    type="password"
+                    value={secrets.meta_access_token || ''}
+                    onChange={(e) => setSecrets({...secrets, meta_access_token: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="EAAK..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">App Secret</label>
+                  <input
+                    type="password"
+                    value={secrets.meta_app_secret || ''}
+                    onChange={(e) => setSecrets({...secrets, meta_app_secret: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="abc123def456..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Webhook Verify Token</label>
+                  <input
+                    type="text"
+                    value={secrets.meta_verify_token || ''}
+                    onChange={(e) => setSecrets({...secrets, meta_verify_token: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="your_secret_verify_token"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Twilio */}
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">📞 Twilio Configuration</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Account SID
+                    <a href="https://console.twilio.com" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Twilio →</a>
+                  </label>
+                  <input
+                    type="text"
+                    value={secrets.twilio_account_sid || ''}
+                    onChange={(e) => setSecrets({...secrets, twilio_account_sid: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="AC..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Auth Token</label>
+                  <input
+                    type="password"
+                    value={secrets.twilio_auth_token || ''}
+                    onChange={(e) => setSecrets({...secrets, twilio_auth_token: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="abc123..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Phone Number</label>
+                  <input
+                    type="tel"
+                    value={secrets.twilio_whatsapp_number || ''}
+                    onChange={(e) => setSecrets({...secrets, twilio_whatsapp_number: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="+14155238886"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Stripe */}
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">💳 Stripe Configuration</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Secret Key
+                    <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Stripe →</a>
+                  </label>
+                  <input
+                    type="password"
+                    value={secrets.stripe_secret_key || ''}
+                    onChange={(e) => setSecrets({...secrets, stripe_secret_key: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="sk_live_..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Publishable Key</label>
+                  <input
+                    type="text"
+                    value={secrets.stripe_publishable_key || ''}
+                    onChange={(e) => setSecrets({...secrets, stripe_publishable_key: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="pk_live_..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Webhook Secret</label>
+                  <input
+                    type="password"
+                    value={secrets.stripe_webhook_secret || ''}
+                    onChange={(e) => setSecrets({...secrets, stripe_webhook_secret: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="whsec_..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Google APIs */}
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">📅 Google APIs Configuration</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Client ID
+                    <a href="https://console.cloud.google.com" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Google Cloud →</a>
+                  </label>
+                  <input
+                    type="text"
+                    value={secrets.google_client_id || ''}
+                    onChange={(e) => setSecrets({...secrets, google_client_id: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="123456789-abc.apps.googleusercontent.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
+                  <input
+                    type="password"
+                    value={secrets.google_client_secret || ''}
+                    onChange={(e) => setSecrets({...secrets, google_client_secret: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="GOCSPX-..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Refresh Token</label>
+                  <input
+                    type="password"
+                    value={secrets.google_refresh_token || ''}
+                    onChange={(e) => setSecrets({...secrets, google_refresh_token: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    placeholder="1//..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Calendar ID (Email)</label>
+                  <input
+                    type="email"
+                    value={secrets.google_calendar_id || ''}
+                    onChange={(e) => setSecrets({...secrets, google_calendar_id: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                    placeholder="youremail@gmail.com"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 font-semibold"
+            >
+              {saving ? 'Saving Secrets...' : '🔐 Save Secrets (Encrypted)'}
+            </button>
+          </form>
+        )}
+
+        {/* AI Config Tab */}
+        {activeTab === 'ai' && (
+          <form onSubmit={handleSaveSettings} className="space-y-6">
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">AI Model Settings</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
+                  <select
+                    value={settings.ai_model || business?.ai_model || 'gpt-4o'}
+                    onChange={(e) => setSettings({...settings, ai_model: e.target.value})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  >
+                    <option value="gpt-4o">GPT-4o (Best quality)</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo (Faster)</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Cheaper)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (0-1)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="1"
+                    value={settings.ai_temperature || business?.ai_temperature || 0.7}
+                    onChange={(e) => setSettings({...settings, ai_temperature: parseFloat(e.target.value)})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Higher = more creative, Lower = more focused</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens per Response</label>
+                  <input
+                    type="number"
+                    value={settings.ai_max_tokens || business?.ai_max_tokens || 700}
+                    onChange={(e) => setSettings({...settings, ai_max_tokens: parseInt(e.target.value)})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Conversation Memory (messages)</label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="50"
+                    value={settings.ai_conversation_memory || business?.ai_conversation_memory || 10}
+                    onChange={(e) => setSettings({...settings, ai_conversation_memory: parseInt(e.target.value)})}
+                    className="w-full px-4 py-2 border rounded-lg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Number of previous messages AI remembers</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save AI Settings'}
+            </button>
+          </form>
+        )}
+
+        {/* Integrations Tab */}
+        {activeTab === 'integrations' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg border p-6">
+              <h2 className="text-xl font-bold mb-4">📋 Integration Status</h2>
+              <div className="space-y-3">
+                <IntegrationRow name="OpenAI GPT-4" status={systemStatus.openai} />
+                <IntegrationRow name="Meta WhatsApp" status={systemStatus.meta} />
+                <IntegrationRow name="Twilio WhatsApp" status={systemStatus.twilio} />
+                <IntegrationRow name="Stripe Payments" status={systemStatus.stripe} />
+                <IntegrationRow name="Google Calendar" status={systemStatus.google} />
+                <IntegrationRow name="Supabase Database" status={systemStatus.supabase} />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>💡 Tip:</strong> Configure API credentials in the Secrets tab (Admin only) to enable integrations.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Show message if user tries to access Secrets without permission */}
+        {activeTab === 'secrets' && !isAdmin && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <h2 className="text-xl font-bold text-red-900 mb-2">🔐 Access Denied</h2>
+            <p className="text-red-700">Only Admin and Owner roles can access the Secrets tab.</p>
+            <p className="text-sm text-red-600 mt-2">Your role: {employee?.role?.name}</p>
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+// Tab Button Component
+function TabButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+        active
+          ? 'border-purple-600 text-purple-600'
+          : 'border-transparent text-gray-600 hover:text-gray-900'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -305,6 +703,18 @@ function ProviderCard({
           </li>
         ))}
       </ul>
+    </div>
+  )
+}
+
+// Integration Row Component
+function IntegrationRow({ name, status }: { name: string; status: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b last:border-0">
+      <span className="font-medium text-gray-700">{name}</span>
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${status ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+        {status ? '✓ Connected' : 'Not Configured'}
+      </span>
     </div>
   )
 }
