@@ -63,11 +63,11 @@ export default function UsageBanner() {
 
   if (loading) {
     return (
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+      <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 mb-6">
         <div className="animate-pulse flex space-x-4">
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-purple-200 rounded w-3/4"></div>
-            <div className="h-3 bg-purple-200 rounded w-1/2"></div>
+            <div className="h-4 bg-purple-200 dark:bg-purple-800 rounded w-3/4"></div>
+            <div className="h-3 bg-purple-200 dark:bg-purple-800 rounded w-1/2"></div>
           </div>
         </div>
       </div>
@@ -88,16 +88,16 @@ export default function UsageBanner() {
   const isDanger = usage.usage_percentage >= 100
 
   const bgColor = isDanger
-    ? 'bg-red-50 border-red-200'
+    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
     : isWarning
-    ? 'bg-yellow-50 border-yellow-200'
-    : 'bg-blue-50 border-blue-200'
+    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+    : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
 
   const textColor = isDanger
-    ? 'text-red-800'
+    ? 'text-red-800 dark:text-red-300'
     : isWarning
-    ? 'text-yellow-800'
-    : 'text-blue-800'
+    ? 'text-yellow-800 dark:text-yellow-300'
+    : 'text-blue-800 dark:text-blue-300'
 
   const barColor = isDanger
     ? 'bg-red-600'
@@ -121,7 +121,7 @@ export default function UsageBanner() {
         {(isWarning || isDanger) && (
           <Link
             href="/pricing"
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm font-medium"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-800 transition text-sm font-medium"
           >
             Upgrade Plan
           </Link>
@@ -136,7 +136,7 @@ export default function UsageBanner() {
             {usage.conversations_current.toLocaleString()} / {usage.conversations_limit.toLocaleString()}
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-2">
+        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
             className={`${barColor} h-2 rounded-full transition-all duration-300`}
             style={{ width: `${Math.min(usage.usage_percentage, 100)}%` }}
@@ -155,7 +155,7 @@ export default function UsageBanner() {
 
       {/* Danger Message */}
       {isDanger && (
-        <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded text-sm text-red-800">
+        <div className="mt-3 p-3 bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded text-sm text-red-800 dark:text-red-300">
           <strong>Action Required:</strong> You've reached your monthly conversation limit.
           Upgrade your plan to continue using the platform.
         </div>
@@ -163,7 +163,7 @@ export default function UsageBanner() {
 
       {/* Warning Message */}
       {isWarning && (
-        <div className="mt-3 p-3 bg-yellow-100 border border-yellow-300 rounded text-sm text-yellow-800">
+        <div className="mt-3 p-3 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-300">
           <strong>Heads up:</strong> You're at {usage.usage_percentage}% of your monthly conversation limit.
           Consider upgrading to avoid service interruption.
         </div>

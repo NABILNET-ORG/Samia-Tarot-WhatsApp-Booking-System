@@ -33,7 +33,7 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
   if (message.sender_type === 'system') {
     return (
       <div className="flex justify-center my-4">
-        <div className="bg-yellow-50 text-yellow-800 px-4 py-2 rounded-full text-sm">
+        <div className="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-4 py-2 rounded-full text-sm">
           {message.content}
         </div>
       </div>
@@ -46,7 +46,7 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
       <div className={`max-w-md ${isOwnMessage ? 'order-2' : 'order-1'}`}>
         {/* Sender Name (for agent messages from others) */}
         {!isOwnMessage && message.sender_type === 'agent' && (
-          <div className="text-xs text-gray-500 mb-1 px-3">
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 px-3">
             {message.sender_name}
           </div>
         )}
@@ -57,8 +57,8 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
             isOwnMessage
               ? 'bg-blue-500 text-white rounded-br-none'
               : message.sender_type === 'customer'
-              ? 'bg-white text-gray-900 rounded-bl-none'
-              : 'bg-gray-100 text-gray-900 rounded-bl-none'
+              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none'
           }`}
         >
           {/* Message Content */}
@@ -88,7 +88,7 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
 
           {/* Timestamp & Status */}
           <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
-            isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+            isOwnMessage ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
           }`}>
             <span>
               {formatDistanceToNow(new Date(message.created_at), {

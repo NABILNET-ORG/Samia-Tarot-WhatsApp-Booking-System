@@ -120,17 +120,17 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       {/* Header - WhatsApp Style - STICKY */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {/* Back Button (Mobile Only) */}
           {isMobile && onBack && (
             <button
               onClick={onBack}
-              className="p-2 hover:bg-gray-100 rounded-full -ml-2"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full -ml-2"
             >
-              <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -139,14 +139,14 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
           {/* Customer Avatar & Name (Clickable on mobile) */}
           <button
             onClick={onToggleCustomerInfo}
-            className="flex items-center gap-3 hover:bg-gray-50 rounded-lg p-2 -ml-2 transition-colors"
+            className="flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg p-2 -ml-2 transition-colors"
           >
             <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
               {conversation?.phone?.[0] || 'C'}
             </div>
             <div className="text-left">
-              <h2 className="font-semibold text-gray-900">{conversation?.phone || 'Customer'}</h2>
-              <p className="text-xs text-gray-500">
+              <h2 className="font-semibold text-gray-900 dark:text-white">{conversation?.phone || 'Customer'}</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {isConnected ? (
                   <span className="flex items-center gap-1">
                     <span className="h-2 w-2 bg-green-500 rounded-full" />
@@ -214,10 +214,10 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
           {!isMobile && (
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               title="Search in conversation"
             >
-              <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
@@ -228,22 +228,22 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
             <div className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="More options"
               >
-                <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
               </button>
               {/* Menu Dropdown */}
               {showMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                   <button
                     onClick={() => {
                       onToggleCustomerInfo()
                       setShowMenu(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Contact Info
                   </button>
@@ -252,7 +252,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                       setShowSearch(true)
                       setShowMenu(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Search Messages
                   </button>
@@ -275,11 +275,11 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                       }
                       setShowMenu(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     Export Chat
                   </button>
-                  <div className="border-t border-gray-200 my-1"></div>
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                   <button
                     onClick={async () => {
                       if (confirm('Are you sure you want to clear this conversation? All messages will be deleted.')) {
@@ -300,7 +300,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                       }
                       setShowMenu(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-orange-600 hover:bg-orange-50"
+                    className="w-full px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20"
                   >
                     Clear Messages
                   </button>
@@ -325,7 +325,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                       }
                       setShowMenu(false)
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
                     Delete Conversation
                   </button>
@@ -338,7 +338,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
 
       {/* Search Bar (appears when search is active) */}
       {showSearch && (
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
@@ -346,15 +346,15 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search in messages..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 autoFocus
               />
-              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             {searchQuery && (
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
                 {messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase())).length} results
               </span>
             )}
@@ -363,7 +363,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                 setShowSearch(false)
                 setSearchQuery('')
               }}
-              className="px-3 py-2 text-sm text-gray-600 hover:text-gray-900"
+              className="px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
               Cancel
             </button>
@@ -375,10 +375,10 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             No messages yet. Start the conversation!
           </div>
         ) : (
@@ -398,11 +398,11 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
 
         {/* Typing Indicator */}
         {typingUsers.length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex gap-1">
-              <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <span className="h-2 w-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="h-2 w-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="h-2 w-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
             <span>{typingUsers[0].employee_name} is typing...</span>
           </div>
@@ -412,7 +412,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
       </div>
 
       {/* Message Composer */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
         <MessageComposer onSendMessage={handleSendMessage} />
       </div>
     </div>

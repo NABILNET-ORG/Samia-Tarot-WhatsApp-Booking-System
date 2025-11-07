@@ -77,7 +77,7 @@ export function NotificationCenter() {
       {/* Notification Bell */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
       >
         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -93,16 +93,16 @@ export function NotificationCenter() {
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
+        <div className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={() => {
                   const unreadIds = notifications.filter(n => !n.is_read).map(n => n.id)
                   markAsRead(unreadIds)
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
                 Mark all as read
               </button>
@@ -112,11 +112,11 @@ export function NotificationCenter() {
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900" />
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-white" />
               </div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <svg className="mx-auto h-12 w-12 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                 </svg>
                 <p>No notifications yet</p>
@@ -126,22 +126,22 @@ export function NotificationCenter() {
                 <button
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                    !notification.is_read ? 'bg-blue-50' : ''
+                  className={`w-full text-left p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                    !notification.is_read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`flex-shrink-0 w-2 h-2 rounded-full mt-2 ${
-                      notification.is_read ? 'bg-gray-300' : 'bg-blue-500'
+                      notification.is_read ? 'bg-gray-300 dark:bg-gray-600' : 'bg-blue-500'
                     }`} />
                     <div className="flex-1 min-w-0">
                       <p className={`text-sm font-medium ${
-                        notification.is_read ? 'text-gray-700' : 'text-gray-900'
+                        notification.is_read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-white'
                       }`}>
                         {notification.title}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">{notification.body}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{notification.body}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {formatDistanceToNow(new Date(notification.created_at), {
                           addSuffix: true,
                         })}

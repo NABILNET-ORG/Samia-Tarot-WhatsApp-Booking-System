@@ -63,14 +63,14 @@ export function MessageComposer({ onSendMessage, disabled }: MessageComposerProp
     <div className="relative">
       {/* Emoji Picker */}
       {showEmoji && (
-        <div className="absolute bottom-full left-0 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 p-3">
+        <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
           <div className="grid grid-cols-5 gap-2">
             {EMOJI_LIST.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
                 onClick={() => insertEmoji(emoji)}
-                className="text-2xl hover:bg-gray-100 rounded p-1 transition-colors"
+                className="text-2xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded p-1 transition-colors"
               >
                 {emoji}
               </button>
@@ -97,7 +97,7 @@ export function MessageComposer({ onSendMessage, disabled }: MessageComposerProp
           <button
             type="button"
             onClick={() => setShowEmoji(!showEmoji)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             title="Emoji"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +109,7 @@ export function MessageComposer({ onSendMessage, disabled }: MessageComposerProp
           <button
             type="button"
             onClick={() => setShowCanned(!showCanned)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             title="Quick replies"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -119,7 +119,7 @@ export function MessageComposer({ onSendMessage, disabled }: MessageComposerProp
         </div>
 
         {/* Text Input - Rounded */}
-        <div className="flex-1 bg-white rounded-full border border-gray-300 flex items-center px-4 py-2">
+        <div className="flex-1 bg-white dark:bg-gray-700 rounded-full border border-gray-300 dark:border-gray-600 flex items-center px-4 py-2">
           <textarea
             ref={textareaRef}
             value={message}
@@ -133,7 +133,7 @@ export function MessageComposer({ onSendMessage, disabled }: MessageComposerProp
             placeholder="Type a message"
             rows={1}
             disabled={disabled || sending}
-            className="w-full resize-none border-none focus:outline-none bg-transparent disabled:opacity-50"
+            className="w-full resize-none border-none focus:outline-none bg-transparent text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 disabled:opacity-50"
             style={{ maxHeight: '100px' }}
           />
         </div>
@@ -142,7 +142,7 @@ export function MessageComposer({ onSendMessage, disabled }: MessageComposerProp
         <button
           type="submit"
           disabled={!message.trim() || sending || disabled}
-          className="w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center flex-shrink-0"
+          className="w-12 h-12 rounded-full bg-green-500 hover:bg-green-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex items-center justify-center flex-shrink-0"
           title="Send"
         >
           {sending ? (
