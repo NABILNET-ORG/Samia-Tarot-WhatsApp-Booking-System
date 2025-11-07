@@ -29,8 +29,8 @@ export default function SettingsPage() {
   const [knowledgeUrls, setKnowledgeUrls] = useState<string[]>([])
   const [newUrl, setNewUrl] = useState('')
 
-  // Check if current user is Admin
-  const isAdmin = employee?.role_name === 'Admin' || employee?.role_name === 'Owner'
+  // Check if current user is Admin (case-insensitive)
+  const isAdmin = ['admin', 'owner'].includes(employee?.role_name?.toLowerCase() || '')
 
   useEffect(() => {
     if (business) {
