@@ -261,10 +261,10 @@ export class CalendarHelpers {
 
       // Find the slot with the closest start time
       let closestSlot = slots[0]
-      let minDiff = Math.abs(new Date(slots[0].start).getTime() - requestedDate.getTime())
+      let minDiff = Math.abs(slots[0].startTime.getTime() - requestedDate.getTime())
 
       for (const slot of slots) {
-        const slotTime = new Date(slot.start).getTime()
+        const slotTime = slot.startTime.getTime()
         const diff = Math.abs(slotTime - requestedDate.getTime())
 
         if (diff < minDiff) {
