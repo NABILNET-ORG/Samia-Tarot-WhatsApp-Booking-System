@@ -30,6 +30,7 @@ export default function EmployeesPage() {
     email: '',
     full_name: '',
     role_id: '',
+    temporary_password: '',
   })
   const [inviting, setInviting] = useState(false)
   const [inviteError, setInviteError] = useState('')
@@ -89,7 +90,7 @@ export default function EmployeesPage() {
       // Success - reload employees and close modal
       await loadEmployees()
       setShowInviteModal(false)
-      setInviteForm({ email: '', full_name: '', role_id: '' })
+      setInviteForm({ email: '', full_name: '', role_id: '', temporary_password: '' })
     } catch (error: any) {
       setInviteError(error.message)
     } finally {
@@ -281,6 +282,25 @@ export default function EmployeesPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Temporary Password */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Temporary Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={inviteForm.temporary_password}
+                    onChange={(e) => setInviteForm({ ...inviteForm, temporary_password: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Minimum 8 characters"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Employee will receive this password via email and should change it after first login.
+                  </p>
                 </div>
 
                 {/* Error Message */}
