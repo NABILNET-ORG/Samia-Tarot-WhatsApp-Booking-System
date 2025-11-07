@@ -27,10 +27,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mx-auto" />
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading dashboard...</p>
         </div>
       </div>
     )
@@ -38,10 +38,10 @@ export default function DashboardPage() {
 
   if (!employee) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Not Authenticated</h1>
-          <p className="text-gray-600">Please log in to access the dashboard.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Not Authenticated</h1>
+          <p className="text-gray-600 dark:text-gray-300">Please log in to access the dashboard.</p>
         </div>
       </div>
     )
@@ -52,18 +52,18 @@ export default function DashboardPage() {
     // Show customer info panel
     if (showCustomerInfo && selectedConversationId) {
       return (
-        <div className="h-screen bg-white">
+        <div className="h-screen bg-white dark:bg-gray-900">
           {/* Back button */}
-          <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+          <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center gap-3">
             <button
               onClick={() => setShowCustomerInfo(false)}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
             >
-              <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-6 w-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h2 className="font-semibold text-gray-900">Contact Info</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-white">Contact Info</h2>
           </div>
           <CustomerInfoPanel conversationId={selectedConversationId} />
         </div>
@@ -73,7 +73,7 @@ export default function DashboardPage() {
     // Show chat window
     if (selectedConversationId) {
       return (
-        <div className="h-screen flex flex-col bg-white">
+        <div className="h-screen flex flex-col bg-white dark:bg-gray-900">
           <ChatWindow
             conversationId={selectedConversationId}
             onToggleCustomerInfo={() => setShowCustomerInfo(!showCustomerInfo)}
@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
     // Show conversation list (default mobile view)
     return (
-      <div className="h-screen bg-white">
+      <div className="h-screen bg-white dark:bg-gray-900">
         <ConversationList
           businessId={business?.id || ''}
           selectedConversationId={selectedConversationId}
@@ -98,9 +98,9 @@ export default function DashboardPage() {
 
   // Desktop: 3-column layout (WhatsApp Web style)
   return (
-    <div className="flex h-[calc(100vh-64px)] bg-gray-100">
+    <div className="flex h-[calc(100vh-64px)] bg-gray-100 dark:bg-gray-900">
       {/* Left Sidebar - Conversation List */}
-      <div className="w-full md:w-96 bg-white border-r border-gray-200 flex-shrink-0">
+      <div className="w-full md:w-96 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
         <ConversationList
           businessId={business?.id || ''}
           selectedConversationId={selectedConversationId}
@@ -117,10 +117,10 @@ export default function DashboardPage() {
             isMobile={false}
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
             <div className="text-center">
               <svg
-                className="mx-auto h-24 w-24 text-gray-400"
+                className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -132,10 +132,10 @@ export default function DashboardPage() {
                   d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                 />
               </svg>
-              <h2 className="mt-4 text-xl font-semibold text-gray-900">
+              <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">
                 Welcome, {employee.full_name}!
               </h2>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-2 text-gray-600 dark:text-gray-300">
                 Select a conversation from the left to start chatting
               </p>
             </div>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
 
       {/* Right Sidebar - Customer Info (Desktop only, toggle) */}
       {selectedConversationId && showCustomerInfo && (
-        <div className="hidden lg:block w-80 bg-white border-l border-gray-200 flex-shrink-0">
+        <div className="hidden lg:block w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex-shrink-0">
           <CustomerInfoPanel conversationId={selectedConversationId} />
         </div>
       )}
