@@ -94,14 +94,21 @@ export default function CustomersPage() {
     if (!selectedCustomer) return
     try {
       const response = await fetch(`/api/customers/${selectedCustomer.id}`, { method: 'DELETE' })
+      const data = await response.json()
+
       if (response.ok) {
-        alert('✅ Customer deleted!')
+        // Show GDPR deletion summary
+        const summary = data.deletion_summary
+        alert(`✅ Customer deleted successfully (GDPR compliant)\n\n` +
+          `Conversations deleted: ${summary?.conversations_deleted || 0}\n` +
+          `Bookings deleted: ${summary?.bookings_deleted || 0}\n\n` +
+          `Retention Policy: ${summary?.retention_policy || '30 days'}`)
+
         setShowDeleteModal(false)
         setSelectedCustomer(null)
         loadCustomers()
       } else {
-        const data = await response.json()
-        alert(`❌ ${data.error}`)
+        alert(`❌ ${data.error || 'Failed to delete customer'}`)
       }
     } catch (error) {
       alert('❌ Failed to delete')
@@ -235,13 +242,48 @@ export default function CustomersPage() {
 
         {showDeleteModal && selectedCustomer && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full p-6 text-center">
-              <div className="mb-4 text-red-600 text-4xl">⚠️</div>
-              <h2 className="text-xl font-bold mb-2">Delete Customer</h2>
-              <p className="text-gray-600 mb-6">Delete <strong>{selectedCustomer.name_english || selectedCustomer.phone}</strong>? This cannot be undone.</p>
+            <div className="bg-white rounded-lg max-w-lg w-full p-6">
+              <div className="mb-4 text-red-600 text-4xl text-center">⚠️</div>
+              <h2 className="text-2xl font-bold mb-3 text-center">Delete Customer - GDPR Request</h2>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-yellow-800 font-medium mb-2">
+                  This action will permanently delete:
+                </p>
+                <ul className="text-sm text-yellow-700 space-y-1 ml-4">
+                  <li>• Customer profile: <strong>{selectedCustomer.name_english || selectedCustomer.phone}</strong></li>
+                  <li>• Phone: <strong>{selectedCustomer.phone}</strong></li>
+                  <li>• Email: <strong>{selectedCustomer.email || 'N/A'}</strong></li>
+                  <li>• All conversations with this customer</li>
+                  <li>• All messages in those conversations</li>
+                  <li>• All bookings made by this customer</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>GDPR Compliance:</strong> This soft delete complies with the "right to be forgotten".
+                  Customer data will be anonymized immediately and permanently deleted after 30 days.
+                </p>
+              </div>
+
+              <p className="text-center text-gray-700 mb-6 font-medium">
+                This action cannot be undone. Are you sure?
+              </p>
+
               <div className="flex gap-3">
-                <button onClick={() => { setShowDeleteModal(false); setSelectedCustomer(null) }} className="flex-1 px-4 py-2 border rounded-lg">Cancel</button>
-                <button onClick={handleDelete} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg">Delete</button>
+                <button
+                  onClick={() => { setShowDeleteModal(false); setSelectedCustomer(null) }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Confirm Deletion
+                </button>
               </div>
             </div>
           </div>
