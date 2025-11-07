@@ -7,7 +7,9 @@
 
 import { useState } from 'react'
 import { BusinessProvider } from '@/lib/multi-tenant/context'
+import { ThemeProvider } from '@/lib/theme/ThemeProvider'
 import { NotificationCenter } from '@/components/notifications/NotificationCenter'
+import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 export default function DashboardLayout({
   children,
@@ -17,8 +19,9 @@ export default function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <BusinessProvider>
-      <div className="min-h-screen bg-gray-50">
+    <ThemeProvider>
+      <BusinessProvider>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Mobile-First Top Navigation */}
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
           <div className="px-4 sm:px-6 py-3 sm:py-4">
@@ -40,17 +43,16 @@ export default function DashboardLayout({
               <div className="hidden lg:flex items-center gap-3 xl:gap-4">
                 <a href="/dashboard" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Chat</a>
                 <a href="/dashboard/customers" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Customers</a>
-                <a href="/dashboard/services" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Services</a>
                 <a href="/dashboard/bookings" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Bookings</a>
-                <a href="/dashboard/employees" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Team</a>
-                <a href="/dashboard/templates" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Templates</a>
-                <a href="/dashboard/ai-instructions" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">AI Config</a>
                 <a href="/dashboard/analytics" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Analytics</a>
+                <a href="/dashboard/subscription" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Subscription</a>
                 <a href="/dashboard/settings" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Settings</a>
+                <a href="/dashboard/admin" className="text-sm text-purple-600 hover:text-purple-800 font-medium whitespace-nowrap">Admin</a>
               </div>
 
-              {/* Right: Notifications + Logout */}
+              {/* Right: Theme Toggle + Notifications + Logout */}
               <div className="flex items-center gap-2 sm:gap-4">
+                <ThemeToggle />
                 <NotificationCenter />
                 {/* Desktop Logout */}
                 <button
@@ -96,6 +98,9 @@ export default function DashboardLayout({
                 <a href="/dashboard/employees" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   👨‍💼 Team
                 </a>
+                <a href="/dashboard/roles" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  🔐 Roles
+                </a>
                 <a href="/dashboard/templates" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   📝 Templates
                 </a>
@@ -105,8 +110,31 @@ export default function DashboardLayout({
                 <a href="/dashboard/analytics" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   📊 Analytics
                 </a>
-                <a href="/dashboard/settings" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  ⚙️ Settings
+                <a href="/dashboard/media" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  📁 Media
+                </a>
+                <a href="/dashboard/notes" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  📝 Notes
+                </a>
+                <div className="border-t border-gray-200 my-2"></div>
+                <a href="/dashboard/subscription" className="block px-4 py-3 text-blue-700 hover:bg-blue-50 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  💳 Subscription
+                </a>
+                <a href="/dashboard/admin" className="block px-4 py-3 text-purple-700 hover:bg-purple-50 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  👑 Admin Dashboard
+                </a>
+                <a href="/dashboard/sessions" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  🔐 Sessions
+                </a>
+                <div className="border-t border-gray-200 my-2"></div>
+                <a href="/dashboard/logs/activity" className="block px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm" onClick={() => setMobileMenuOpen(false)}>
+                  📋 Activity Logs
+                </a>
+                <a href="/dashboard/logs/webhooks" className="block px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm" onClick={() => setMobileMenuOpen(false)}>
+                  🔗 Webhook Logs
+                </a>
+                <a href="/dashboard/voice" className="block px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm" onClick={() => setMobileMenuOpen(false)}>
+                  🎤 Voice Messages
                 </a>
               </div>
             )}
@@ -117,5 +145,6 @@ export default function DashboardLayout({
         <main className="pb-safe">{children}</main>
       </div>
     </BusinessProvider>
+    </ThemeProvider>
   )
 }
