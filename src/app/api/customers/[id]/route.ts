@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         .eq('customer_id', id)
 
       if (conversations && conversations.length > 0) {
-        const conversationIds = conversations.map(c => c.id)
+        const conversationIds = conversations.map((c: any) => c.id)
         await supabaseAdmin
           .from('messages')
           .update({
