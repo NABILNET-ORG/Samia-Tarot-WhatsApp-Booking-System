@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import ServiceModal from '@/components/modals/ServiceModal'
 
 interface Service {
-  id: string
+  id?: string
   name: string
   description: string
   duration_minutes: number
@@ -78,7 +78,9 @@ export default function ServicesPage() {
     }
   }
 
-  const handleDeleteService = async (id: string) => {
+  const handleDeleteService = async (id: string | undefined) => {
+    if (!id) return
+
     if (!confirm('Are you sure you want to delete this service?')) {
       return
     }
