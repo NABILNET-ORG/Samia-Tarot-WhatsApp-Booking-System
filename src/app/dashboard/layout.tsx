@@ -50,9 +50,8 @@ export default function DashboardLayout({
                 <a href="/dashboard/templates" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">📝 Templates</a>
                 <a href="/dashboard/ai-instructions" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">🤖 AI</a>
                 <a href="/dashboard/analytics" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">📊 Analytics</a>
-                <a href="/dashboard/subscription" className="text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 font-medium whitespace-nowrap">💳 Sub</a>
+                <a href="/dashboard/settings" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">⚙️ Settings</a>
                 <a href="/dashboard/admin" className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium whitespace-nowrap">👑 Admin</a>
-                <a href="/dashboard/sessions" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">🔐 Sessions</a>
               </div>
 
               {/* Right: Theme Toggle + Notifications + Logout */}
