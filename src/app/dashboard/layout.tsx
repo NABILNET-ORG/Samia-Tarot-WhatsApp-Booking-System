@@ -40,14 +40,19 @@ export default function DashboardLayout({
               </div>
 
               {/* Desktop Navigation (hidden on mobile) */}
-              <div className="hidden lg:flex items-center gap-3 xl:gap-4">
-                <a href="/dashboard" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Chat</a>
-                <a href="/dashboard/customers" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Customers</a>
-                <a href="/dashboard/bookings" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Bookings</a>
-                <a href="/dashboard/analytics" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Analytics</a>
-                <a href="/dashboard/subscription" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Subscription</a>
-                <a href="/dashboard/settings" className="text-sm text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">Settings</a>
-                <a href="/dashboard/admin" className="text-sm text-purple-600 hover:text-purple-800 font-medium whitespace-nowrap">Admin</a>
+              <div className="hidden lg:flex items-center gap-2 xl:gap-3 text-xs xl:text-sm">
+                <a href="/dashboard" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">💬 Chat</a>
+                <a href="/dashboard/customers" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">👥 Customers</a>
+                <a href="/dashboard/services" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">🛎️ Services</a>
+                <a href="/dashboard/bookings" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">📅 Bookings</a>
+                <a href="/dashboard/employees" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">👨‍💼 Team</a>
+                <a href="/dashboard/roles" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">🔐 Roles</a>
+                <a href="/dashboard/templates" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">📝 Templates</a>
+                <a href="/dashboard/ai-instructions" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">🤖 AI</a>
+                <a href="/dashboard/analytics" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">📊 Analytics</a>
+                <a href="/dashboard/subscription" className="text-blue-700 hover:text-blue-900 font-medium whitespace-nowrap">💳 Sub</a>
+                <a href="/dashboard/admin" className="text-purple-600 hover:text-purple-800 font-medium whitespace-nowrap">👑 Admin</a>
+                <a href="/dashboard/sessions" className="text-gray-700 hover:text-gray-900 font-medium whitespace-nowrap">🔐 Sessions</a>
               </div>
 
               {/* Right: Theme Toggle + Notifications + Logout */}
