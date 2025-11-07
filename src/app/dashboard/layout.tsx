@@ -78,61 +78,23 @@ export default function DashboardLayout({
               </div>
             </div>
 
-            {/* Mobile Menu Dropdown */}
+            {/* Mobile Menu Dropdown - Simplified to match desktop */}
             {mobileMenuOpen && (
-              <div className="lg:hidden mt-4 pb-3 space-y-1 border-t border-gray-200 pt-4">
-                <a href="/dashboard" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+              <div className="lg:hidden mt-4 pb-3 space-y-1 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <a href="/dashboard" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   💬 Chat
                 </a>
-                <a href="/dashboard/customers" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <a href="/dashboard/customers" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   👥 Customers
                 </a>
-                <a href="/dashboard/services" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <a href="/dashboard/services" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   🛎️ Services
                 </a>
-                <a href="/dashboard/bookings" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                <a href="/dashboard/bookings" className="block px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
                   📅 Bookings
                 </a>
-                <a href="/dashboard/employees" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  👨‍💼 Team
-                </a>
-                <a href="/dashboard/roles" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  🔐 Roles
-                </a>
-                <a href="/dashboard/templates" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  📝 Templates
-                </a>
-                <a href="/dashboard/ai-instructions" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  🤖 AI Config
-                </a>
-                <a href="/dashboard/analytics" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  📊 Analytics
-                </a>
-                <a href="/dashboard/media" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  📁 Media
-                </a>
-                <a href="/dashboard/notes" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  📝 Notes
-                </a>
-                <div className="border-t border-gray-200 my-2"></div>
-                <a href="/dashboard/subscription" className="block px-4 py-3 text-blue-700 hover:bg-blue-50 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  💳 Subscription
-                </a>
-                <a href="/dashboard/admin" className="block px-4 py-3 text-purple-700 hover:bg-purple-50 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  👑 Admin Dashboard
-                </a>
-                <a href="/dashboard/sessions" className="block px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                  🔐 Sessions
-                </a>
-                <div className="border-t border-gray-200 my-2"></div>
-                <a href="/dashboard/logs/activity" className="block px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm" onClick={() => setMobileMenuOpen(false)}>
-                  📋 Activity Logs
-                </a>
-                <a href="/dashboard/logs/webhooks" className="block px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm" onClick={() => setMobileMenuOpen(false)}>
-                  🔗 Webhook Logs
-                </a>
-                <a href="/dashboard/voice" className="block px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm" onClick={() => setMobileMenuOpen(false)}>
-                  🎤 Voice Messages
+                <a href="/dashboard/admin" className="block px-4 py-3 text-purple-700 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg font-medium transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                  👑 Admin
                 </a>
               </div>
             )}
