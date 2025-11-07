@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333EA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Crystal Ball / Mystical Circle -->
+  <circle cx="50" cy="50" r="45" fill="url(#grad)" opacity="0.9"/>
+  <circle cx="50" cy="50" r="35" fill="none" stroke="#FFD700" stroke-width="2"/>
+  <!-- Star/Sparkle -->
+  <path d="M50 20 L52 28 L60 28 L54 33 L56 41 L50 36 L44 41 L46 33 L40 28 L48 28 Z" fill="#FFD700" opacity="0.9"/>
+  <!-- Inner glow -->
+  <circle cx="50" cy="50" r="30" fill="#FFFFFF" opacity="0.1"/>
+</svg>
