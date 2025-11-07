@@ -67,9 +67,10 @@ export default function AIInstructionsPage() {
       const data = await response.json()
       if (data.settings) setSettings(data.settings)
 
-      // Load knowledge base URLs
-      if (business?.knowledge_base_urls) {
-        setKnowledgeUrls(business.knowledge_base_urls)
+      // Load knowledge base URLs from settings
+      const kbUrls = (data.settings as any)?.knowledge_base_urls || []
+      if (kbUrls && Array.isArray(kbUrls)) {
+        setKnowledgeUrls(kbUrls)
       }
     } catch (error) {
       console.error('Failed to load settings:', error)
