@@ -300,9 +300,34 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                       }
                       setShowMenu(false)
                     }}
+                    className="w-full px-4 py-2 text-left text-sm text-orange-600 hover:bg-orange-50"
+                  >
+                    Clear Messages
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (confirm('Are you sure you want to delete this conversation? This will archive it and it will no longer appear in your list.')) {
+                        try {
+                          const response = await fetch(`/api/conversations/${conversationId}`, {
+                            method: 'DELETE'
+                          })
+                          if (response.ok) {
+                            alert('Conversation deleted successfully!')
+                            if (onBack) {
+                              onBack() // Go back to conversation list
+                            }
+                          } else {
+                            alert('Failed to delete conversation')
+                          }
+                        } catch (error) {
+                          alert('Error deleting conversation')
+                        }
+                      }
+                      setShowMenu(false)
+                    }}
                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                   >
-                    Clear Conversation
+                    Delete Conversation
                   </button>
                 </div>
               )}
