@@ -10,10 +10,10 @@ export type PasswordValidationResult = {
 
 export const PASSWORD_REQUIREMENTS = {
   minLength: 8,
-  requireUppercase: true,
-  requireLowercase: true,
-  requireNumbers: true,
-  requireSpecialChars: false, // Optional for temporary passwords
+  requireUppercase: false, // Simplified for temp passwords
+  requireLowercase: false,
+  requireNumbers: false,
+  requireSpecialChars: false,
   specialChars: '!@#$%^&*()_+-=[]{}|;:,.<>?',
 }
 
@@ -54,15 +54,8 @@ export function validatePassword(password: string): PasswordValidationResult {
     }
   }
 
-  // Check for common weak passwords (exact match only, not substring)
-  const commonPasswords = [
-    'password', 'password123', '123456', '12345678', 'qwerty', 'abc123',
-    'admin123', 'letmein', 'welcome123', 'monkey', 'dragon',
-  ]
-
-  if (commonPasswords.includes(password.toLowerCase())) {
-    errors.push('Password is too common. Please choose a more unique password')
-  }
+  // No common password check for temporary passwords (too restrictive)
+  // Users should change temporary passwords on first login anyway
 
   return {
     valid: errors.length === 0,
