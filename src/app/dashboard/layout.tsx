@@ -39,18 +39,12 @@ export default function DashboardLayout({
                 <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">WhatsApp AI</h1>
               </div>
 
-              {/* Desktop Navigation (hidden on mobile) */}
-              <div className="hidden lg:flex items-center gap-2 xl:gap-3 text-xs xl:text-sm">
+              {/* Desktop Navigation (hidden on mobile) - Simplified to main pages only */}
+              <div className="hidden lg:flex items-center gap-4 xl:gap-6 text-sm">
                 <a href="/dashboard" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">💬 Chat</a>
                 <a href="/dashboard/customers" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">👥 Customers</a>
                 <a href="/dashboard/services" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">🛎️ Services</a>
                 <a href="/dashboard/bookings" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">📅 Bookings</a>
-                <a href="/dashboard/employees" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">👨‍💼 Team</a>
-                <a href="/dashboard/roles" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">🔐 Roles</a>
-                <a href="/dashboard/templates" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">📝 Templates</a>
-                <a href="/dashboard/ai-instructions" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">🤖 AI</a>
-                <a href="/dashboard/analytics" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">📊 Analytics</a>
-                <a href="/dashboard/settings" className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium whitespace-nowrap">⚙️ Settings</a>
                 <a href="/dashboard/admin" className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium whitespace-nowrap">👑 Admin</a>
               </div>
 
