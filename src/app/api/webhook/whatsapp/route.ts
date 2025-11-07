@@ -112,9 +112,13 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Routing message to business ID: ${businessId}`)
 
     // Process message with AI engine (multi-tenant)
+    const internalApiKey = process.env.INTERNAL_API_KEY || 'dev-internal-key-change-in-production'
     const processResponse = await fetch(`${request.nextUrl.origin}/api/webhook/process-message`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-API-Key': internalApiKey,
+      },
       body: JSON.stringify({
         business_id: businessId,
         phone: from,

@@ -186,6 +186,30 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
             </button>
           )}
 
+          {/* Give Back to AI Button - In Header */}
+          {conversation && conversation.mode === 'human' && (
+            <button
+              onClick={async () => {
+                try {
+                  const response = await fetch(`/api/conversations/givebacktoai`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversation_id: conversationId })
+                  })
+                  if (response.ok) {
+                    handleTakeOver() // Reload conversation
+                  }
+                } catch (error) {
+                  console.error('Failed to give back to AI:', error)
+                }
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              title="Give back to AI"
+            >
+              Give to AI
+            </button>
+          )}
+
           {/* Search Button */}
           {!isMobile && (
             <button

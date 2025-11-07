@@ -1,68 +1,92 @@
 /**
  * 🔄 Provider Switching API
  * Switch between Meta and Twilio WhatsApp providers
+ * Requires authentication - admin/owner roles only
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { resetWhatsAppProvider } from '@/lib/whatsapp/factory'
+import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json()
-    const { provider } = body
+  return requireBusinessContext(request, async (context) => {
+    try {
+      // Check if user has admin/owner role
+      const allowedRoles = ['admin', 'owner']
+      if (!allowedRoles.includes(context.employee.role_name.toLowerCase())) {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Admin or Owner role required' },
+          { status: 403 }
+        )
+      }
 
-    // Validate provider
-    if (provider !== 'meta' && provider !== 'twilio') {
-      return NextResponse.json(
-        { error: 'Invalid provider. Must be "meta" or "twilio"' },
-        { status: 400 }
-      )
+      const body = await request.json()
+      const { provider } = body
+
+      // Validate provider
+      if (provider !== 'meta' && provider !== 'twilio') {
+        return NextResponse.json(
+          { error: 'Invalid provider. Must be "meta" or "twilio"' },
+          { status: 400 }
+        )
+      }
+
+      // Update in database
+      const { error } = await supabaseAdmin
+        .from('system_settings')
+        .update({ setting_value: provider })
+        .eq('setting_key', 'whatsapp_provider')
+
+      if (error) {
+        throw new Error(`Database update failed: ${error.message}`)
+      }
+
+      // Reset provider instance to pick up new setting
+      resetWhatsAppProvider()
+
+      console.log(`✅ WhatsApp provider switched to: ${provider} by ${context.employee.email}`)
+
+      return NextResponse.json({
+        success: true,
+        provider,
+        message: `Switched to ${provider}`,
+      })
+    } catch (error: any) {
+      console.error('Provider switch error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    // Update in database
-    const { error } = await supabaseAdmin
-      .from('system_settings')
-      .update({ setting_value: provider })
-      .eq('setting_key', 'whatsapp_provider')
-
-    if (error) {
-      throw new Error(`Database update failed: ${error.message}`)
-    }
-
-    // Reset provider instance to pick up new setting
-    resetWhatsAppProvider()
-
-    console.log(`✅ WhatsApp provider switched to: ${provider}`)
-
-    return NextResponse.json({
-      success: true,
-      provider,
-      message: `Switched to ${provider}`,
-    })
-  } catch (error: any) {
-    console.error('Provider switch error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+  })
 }
 
-export async function GET() {
-  try {
-    // Get current provider from database
-    const { data, error } = await supabaseAdmin
-      .from('system_settings')
-      .select('setting_value')
-      .eq('setting_key', 'whatsapp_provider')
-      .single()
+export async function GET(request: NextRequest) {
+  return requireBusinessContext(request, async (context) => {
+    try {
+      // Check if user has admin/owner role
+      const allowedRoles = ['admin', 'owner']
+      if (!allowedRoles.includes(context.employee.role_name.toLowerCase())) {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Admin or Owner role required' },
+          { status: 403 }
+        )
+      }
 
-    if (error) {
-      throw new Error(error.message)
+      // Get current provider from database
+      const { data, error } = await supabaseAdmin
+        .from('system_settings')
+        .select('setting_value')
+        .eq('setting_key', 'whatsapp_provider')
+        .single()
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      return NextResponse.json({
+        provider: data?.setting_value || 'meta',
+      })
+    } catch (error: any) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    return NextResponse.json({
-      provider: data?.setting_value || 'meta',
-    })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+  })
 }

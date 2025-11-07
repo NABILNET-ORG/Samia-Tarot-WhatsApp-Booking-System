@@ -25,9 +25,18 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([])
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    full_name: '',
+    role_id: '',
+  })
+  const [inviting, setInviting] = useState(false)
+  const [inviteError, setInviteError] = useState('')
 
   useEffect(() => {
     loadEmployees()
+    loadRoles()
   }, [])
 
   async function loadEmployees() {
@@ -43,6 +52,48 @@ export default function EmployeesPage() {
       console.error('Failed to load employees:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadRoles() {
+    try {
+      const response = await fetch('/api/roles')
+      const data = await response.json()
+
+      if (data.roles) {
+        setRoles(data.roles)
+      }
+    } catch (error) {
+      console.error('Failed to load roles:', error)
+    }
+  }
+
+  async function handleInviteEmployee(e: React.FormEvent) {
+    e.preventDefault()
+    setInviting(true)
+    setInviteError('')
+
+    try {
+      const response = await fetch('/api/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inviteForm),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to invite employee')
+      }
+
+      // Success - reload employees and close modal
+      await loadEmployees()
+      setShowInviteModal(false)
+      setInviteForm({ email: '', full_name: '', role_id: '' })
+    } catch (error: any) {
+      setInviteError(error.message)
+    } finally {
+      setInviting(false)
     }
   }
 
@@ -175,18 +226,100 @@ export default function EmployeesPage() {
           </div>
         </div>
 
-        {/* Invite Modal (placeholder) */}
+        {/* Invite Modal */}
         {showInviteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full">
               <h2 className="text-xl font-bold mb-4">Invite Employee</h2>
-              <p className="text-gray-600 mb-4">Feature coming soon!</p>
-              <button
-                onClick={() => setShowInviteModal(false)}
-                className="w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
-              >
-                Close
-              </button>
+
+              <form onSubmit={handleInviteEmployee} className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={inviteForm.full_name}
+                    onChange={(e) => setInviteForm({ ...inviteForm, full_name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={inviteForm.email}
+                    onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="john@example.com"
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role *
+                  </label>
+                  <select
+                    required
+                    value={inviteForm.role_id}
+                    onChange={(e) => setInviteForm({ ...inviteForm, role_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a role</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Error Message */}
+                {inviteError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">{inviteError}</p>
+                  </div>
+                )}
+
+                {/* Info Message */}
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    An invitation email will be sent to the employee with login instructions.
+                  </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInviteModal(false)
+                      setInviteError('')
+                      setInviteForm({ email: '', full_name: '', role_id: '' })
+                    }}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    disabled={inviting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={inviting}
+                  >
+                    {inviting ? 'Sending Invite...' : 'Send Invite'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

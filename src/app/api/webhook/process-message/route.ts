@@ -1,6 +1,7 @@
 /**
  * 🤖 Process Incoming WhatsApp Message with AI
  * Central webhook processor for automated AI responses
+ * INTERNAL ONLY - Requires internal API key
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -11,9 +12,24 @@ import { sendWhatsAppMessage } from '@/lib/whatsapp/multi-tenant-provider'
 /**
  * POST /api/webhook/process-message
  * Called by WhatsApp webhook to process incoming messages
+ *
+ * Security: This endpoint should only be called internally by other API routes
+ * Add X-Internal-API-Key header with INTERNAL_API_KEY env var
  */
 export async function POST(request: NextRequest) {
   try {
+    // Verify internal API key
+    const internalKey = request.headers.get('x-internal-api-key')
+    const expectedKey = process.env.INTERNAL_API_KEY || 'dev-internal-key-change-in-production'
+
+    if (internalKey !== expectedKey) {
+      console.warn('⚠️ Unauthorized access attempt to internal webhook processor')
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Invalid internal API key' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { business_id, phone, message, media_url, media_type } = body
 
