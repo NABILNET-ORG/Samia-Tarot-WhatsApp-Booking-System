@@ -54,13 +54,13 @@ export function validatePassword(password: string): PasswordValidationResult {
     }
   }
 
-  // Check for common weak passwords
+  // Check for common weak passwords (exact match only, not substring)
   const commonPasswords = [
     'password', 'password123', '123456', '12345678', 'qwerty', 'abc123',
-    'admin', 'admin123', 'letmein', 'welcome', 'monkey', 'dragon',
+    'admin123', 'letmein', 'welcome123', 'monkey', 'dragon',
   ]
 
-  if (commonPasswords.some((weak) => password.toLowerCase().includes(weak))) {
+  if (commonPasswords.includes(password.toLowerCase())) {
     errors.push('Password is too common. Please choose a more unique password')
   }
 
