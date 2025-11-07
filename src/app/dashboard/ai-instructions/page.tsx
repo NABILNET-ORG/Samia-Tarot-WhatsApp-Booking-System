@@ -404,7 +404,7 @@ export default function AIInstructionsPage() {
                       step="0.1"
                       min="0"
                       max="1"
-                      value={settings.ai_temperature || business?.ai_temperature || 0.7}
+                      value={settings.ai_temperature || (business as any)?.ai_temperature || 0.7}
                       onChange={(e) => setSettings({...settings, ai_temperature: parseFloat(e.target.value)})}
                       className="w-full px-4 py-2 border rounded-lg"
                     />
@@ -414,7 +414,7 @@ export default function AIInstructionsPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens per Response</label>
                     <input
                       type="number"
-                      value={settings.ai_max_tokens || business?.ai_max_tokens || 700}
+                      value={settings.ai_max_tokens || (business as any)?.ai_max_tokens || 700}
                       onChange={(e) => setSettings({...settings, ai_max_tokens: parseInt(e.target.value)})}
                       className="w-full px-4 py-2 border rounded-lg"
                     />
@@ -425,7 +425,7 @@ export default function AIInstructionsPage() {
                       type="number"
                       min="5"
                       max="50"
-                      value={settings.ai_conversation_memory || business?.ai_conversation_memory || 10}
+                      value={settings.ai_conversation_memory || (business as any)?.ai_conversation_memory || 10}
                       onChange={(e) => setSettings({...settings, ai_conversation_memory: parseInt(e.target.value)})}
                       className="w-full px-4 py-2 border rounded-lg"
                     />
