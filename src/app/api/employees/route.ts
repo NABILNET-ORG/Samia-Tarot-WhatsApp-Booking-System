@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
         .eq('id', context.business.id)
         .single()
 
-      const businessName = business?.business_name || context.business.business_name || 'WhatsApp AI Platform'
+      const businessName = (business as any)?.business_name || context.business.name || 'WhatsApp AI Platform'
 
       // Send employee invite email
       try {

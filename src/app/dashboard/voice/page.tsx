@@ -6,7 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import VoicePlayer from '@/components/chat/VoicePlayer'
+import { VoicePlayer } from '@/components/chat/VoicePlayer'
 
 interface VoiceMessage {
   id: string
