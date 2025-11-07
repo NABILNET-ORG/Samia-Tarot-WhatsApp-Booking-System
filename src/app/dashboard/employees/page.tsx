@@ -324,7 +324,7 @@ export default function EmployeesPage() {
                     onClick={() => {
                       setShowInviteModal(false)
                       setInviteError('')
-                      setInviteForm({ email: '', full_name: '', role_id: '' })
+                      setInviteForm({ email: '', full_name: '', role_id: '', temporary_password: '' })
                     }}
                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
                     disabled={inviting}
