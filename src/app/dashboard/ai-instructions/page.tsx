@@ -388,7 +388,7 @@ export default function AIInstructionsPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">AI Model</label>
                     <select
-                      value={settings.ai_model || business?.ai_model || 'gpt-4o'}
+                      value={settings.ai_model || (business as any)?.ai_model || 'gpt-4o'}
                       onChange={(e) => setSettings({...settings, ai_model: e.target.value})}
                       className="w-full px-4 py-2 border rounded-lg"
                     >
