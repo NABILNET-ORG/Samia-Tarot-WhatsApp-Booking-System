@@ -372,7 +372,7 @@ export default function AIInstructionsPage() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={settings.features_voice_transcription || business?.features_voice_transcription || false}
+                      checked={settings.features_voice_transcription || (business as any)?.features_voice_transcription || false}
                       onChange={(e) => setSettings({...settings, features_voice_transcription: e.target.checked})}
                       className="sr-only peer"
                     />
