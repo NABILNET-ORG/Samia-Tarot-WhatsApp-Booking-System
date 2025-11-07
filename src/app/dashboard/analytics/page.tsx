@@ -102,10 +102,10 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Analytics</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Analytics</h1>
           <div className="flex gap-2">
             <button
               onClick={() => handleExport('conversations', 'csv')}
@@ -124,34 +124,34 @@ export default function AnalyticsPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mx-auto" />
           </div>
         ) : (
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <div className="bg-white rounded-lg border p-6">
-                <p className="text-gray-600 text-sm mb-2">Total Conversations</p>
-                <p className="text-3xl font-bold text-gray-900">{analytics.total_conversations || 0}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Conversations</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{analytics.total_conversations || 0}</p>
               </div>
-              <div className="bg-white rounded-lg border p-6">
-                <p className="text-gray-600 text-sm mb-2">Total Bookings</p>
-                <p className="text-3xl font-bold text-blue-600">{analytics.total_bookings || 0}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Bookings</p>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{analytics.total_bookings || 0}</p>
               </div>
-              <div className="bg-white rounded-lg border p-6">
-                <p className="text-gray-600 text-sm mb-2">Total Customers</p>
-                <p className="text-3xl font-bold text-green-600">{analytics.total_customers || 0}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Customers</p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{analytics.total_customers || 0}</p>
               </div>
-              <div className="bg-white rounded-lg border p-6">
-                <p className="text-gray-600 text-sm mb-2">Total Revenue</p>
-                <p className="text-3xl font-bold text-purple-600">${analytics.total_revenue || 0}</p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">Total Revenue</p>
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">${analytics.total_revenue || 0}</p>
               </div>
             </div>
 
             {/* Conversation Trend Chart */}
             {conversationTrend.length > 0 && (
-              <div className="bg-white rounded-lg border p-6 mb-8">
-                <h2 className="text-xl font-bold mb-4">Conversation Trend (Last 30 Days)</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8">
+                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Conversation Trend (Last 30 Days)</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={conversationTrend}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -173,8 +173,8 @@ export default function AnalyticsPage() {
 
             {/* Revenue Trend Chart */}
             {revenueTrend.length > 0 && (
-              <div className="bg-white rounded-lg border p-6">
-                <h2 className="text-xl font-bold mb-4">Revenue Trend (Last 30 Days)</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Revenue Trend (Last 30 Days)</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={revenueTrend}>
                     <CartesianGrid strokeDasharray="3 3" />

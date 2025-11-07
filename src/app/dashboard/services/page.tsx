@@ -102,10 +102,10 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4 sm:mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold">Services</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Services</h1>
           <button
             onClick={handleCreateService}
             className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -116,13 +116,13 @@ export default function ServicesPage() {
 
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mx-auto" />
           </div>
         ) : services.length === 0 ? (
-          <div className="bg-white rounded-lg border p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
             <div className="text-6xl mb-4">🛎️</div>
-            <h3 className="text-xl font-semibold mb-2">No services yet</h3>
-            <p className="text-gray-600 mb-4">Create your first service to start accepting bookings</p>
+            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">No services yet</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Create your first service to start accepting bookings</p>
             <button
               onClick={handleCreateService}
               className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
@@ -133,35 +133,35 @@ export default function ServicesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service) => (
-              <div key={service.id} className="bg-white rounded-lg border p-6 hover:shadow-lg transition">
+              <div key={service.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="font-bold text-lg">{service.name}</h3>
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">{service.name}</h3>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      service.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                      service.is_active ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {service.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{service.description}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">{service.description}</p>
 
                 <div className="space-y-2 mb-4 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Duration:</span>
-                    <span className="font-medium">{service.duration_minutes} min</span>
+                    <span className="text-gray-500 dark:text-gray-400">Duration:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{service.duration_minutes} min</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Price:</span>
-                    <span className="font-bold text-purple-600">
+                    <span className="text-gray-500 dark:text-gray-400">Price:</span>
+                    <span className="font-bold text-purple-600 dark:text-purple-400">
                       {service.currency} {service.price.toFixed(2)}
                     </span>
                   </div>
                   {service.requires_deposit && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Deposit:</span>
-                      <span className="font-medium text-orange-600">
+                      <span className="text-gray-500 dark:text-gray-400">Deposit:</span>
+                      <span className="font-medium text-orange-600 dark:text-orange-400">
                         {service.currency} {service.deposit_amount?.toFixed(2)}
                       </span>
                     </div>
@@ -171,13 +171,13 @@ export default function ServicesPage() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEditService(service)}
-                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition text-sm font-medium"
+                    className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition text-sm font-medium"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteService(service.id)}
-                    className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium"
+                    className="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition text-sm font-medium"
                   >
                     Delete
                   </button>

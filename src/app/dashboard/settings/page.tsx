@@ -187,12 +187,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Business Settings</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Business Settings</h1>
 
         {/* Tab Navigation */}
-        <div className="mb-6 border-b border-gray-200">
+        <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
           <nav className="flex gap-4">
             <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
               🔍 Overview
@@ -216,7 +216,7 @@ export default function SettingsPage() {
           <div className="space-y-8">
             {/* System Status */}
             <div>
-              <h2 className="text-2xl font-bold mb-4">🔍 System Status</h2>
+              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">🔍 System Status</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <StatusCard name="OpenAI (GPT-4)" status={systemStatus.openai} description="Required for AI conversations" />
                 <StatusCard name="Meta WhatsApp" status={systemStatus.meta} description="Official WhatsApp Business API" />
@@ -229,8 +229,8 @@ export default function SettingsPage() {
 
             {/* WhatsApp Provider Switcher */}
             <div>
-              <h2 className="text-2xl font-bold mb-4">📱 WhatsApp Provider</h2>
-              <p className="text-gray-600 mb-4">Choose between Meta WhatsApp Business API or Twilio. You can switch anytime!</p>
+              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">📱 WhatsApp Provider</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">Choose between Meta WhatsApp Business API or Twilio. You can switch anytime!</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <ProviderCard
                   name="Meta WhatsApp Business"
@@ -256,24 +256,24 @@ export default function SettingsPage() {
         {/* General Tab */}
         {activeTab === 'general' && (
           <form onSubmit={handleSaveSettings} className="space-y-6">
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">Business Information</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Business Information</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Name</label>
                   <input
                     type="text"
                     value={settings.name || business?.name || ''}
                     onChange={(e) => setSettings({...settings, name: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Industry</label>
                   <select
                     value={settings.industry || business?.industry || 'other'}
                     onChange={(e) => setSettings({...settings, industry: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="tarot">Tarot & Spiritual</option>
                     <option value="restaurant">Restaurant</option>
@@ -623,8 +623,8 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
       onClick={onClick}
       className={`px-4 py-2 font-medium border-b-2 transition-colors ${
         active
-          ? 'border-purple-600 text-purple-600'
-          : 'border-transparent text-gray-600 hover:text-gray-900'
+          ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+          : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
       }`}
     >
       {children}
@@ -635,14 +635,14 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
 // Status Card Component
 function StatusCard({ name, status, description }: { name: string; status: boolean; description: string }) {
   return (
-    <div className="bg-white border rounded-lg p-4">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-gray-900">{name}</h3>
-        <span className={`px-2 py-1 rounded text-xs font-medium ${status ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+        <h3 className="font-semibold text-gray-900 dark:text-white">{name}</h3>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${status ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
           {status ? '✓ Ready' : 'Not Set'}
         </span>
       </div>
-      <p className="text-sm text-gray-600">{description}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
     </div>
   )
 }
@@ -666,8 +666,8 @@ function ProviderCard({
   return (
     <div
       onClick={onClick}
-      className={`relative bg-white border-2 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg ${
-        active ? 'border-purple-500 bg-purple-50' : 'border-gray-200'
+      className={`relative bg-white dark:bg-gray-800 border-2 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg ${
+        active ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20' : 'border-gray-200 dark:border-gray-700'
       }`}
     >
       {active && (
@@ -676,11 +676,11 @@ function ProviderCard({
         </div>
       )}
       <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-xl font-bold mb-2">{name}</h3>
-      <p className="text-gray-600 mb-4">{description}</p>
+      <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{name}</h3>
+      <p className="text-gray-600 dark:text-gray-400 mb-4">{description}</p>
       <ul className="space-y-2">
         {features.map((feature, idx) => (
-          <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+          <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
             <span className="text-green-500">✓</span>
             <span>{feature}</span>
           </li>
@@ -693,9 +693,9 @@ function ProviderCard({
 // Integration Row Component
 function IntegrationRow({ name, status }: { name: string; status: boolean }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b last:border-0">
-      <span className="font-medium text-gray-700">{name}</span>
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${status ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+    <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+      <span className="font-medium text-gray-700 dark:text-gray-300">{name}</span>
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${status ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
         {status ? '✓ Connected' : 'Not Configured'}
       </span>
     </div>

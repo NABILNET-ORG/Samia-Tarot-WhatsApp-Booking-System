@@ -99,13 +99,13 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Team Members</h1>
-            <p className="text-gray-600 mt-1">Manage employees and their permissions</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Team Members</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Manage employees and their permissions</p>
           </div>
           <button
             onClick={() => setShowInviteModal(true)}
@@ -120,72 +120,72 @@ export default function EmployeesPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Total Employees</p>
-            <p className="text-2xl font-bold text-gray-900">{employees.length}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Total Employees</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{employees.length}</p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Active</p>
-            <p className="text-2xl font-bold text-green-600">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Active</p>
+            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
               {employees.filter(e => e.is_active).length}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Online Now</p>
-            <p className="text-2xl font-bold text-blue-600">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Online Now</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {employees.filter(e => e.is_online).length}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Admins</p>
-            <p className="text-2xl font-bold text-purple-600">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Admins</p>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {employees.filter(e => e.roles?.name === 'admin').length}
             </p>
           </div>
         </div>
 
         {/* Employee List */}
-        <div className="bg-white rounded-lg border border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Employee</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Last Login</th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Employee</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Last Login</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {loading ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white mx-auto" />
                     </td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                       No employees yet. Invite your first team member!
                     </td>
                   </tr>
                 ) : (
                   employees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-gray-50">
+                    <tr key={emp.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
                             {emp.full_name[0]}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">{emp.full_name}</p>
-                            <p className="text-sm text-gray-600">{emp.email}</p>
+                            <p className="font-medium text-gray-900 dark:text-white">{emp.full_name}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">{emp.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                        <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-200 rounded-full text-sm font-medium">
                           {emp.roles?.name || 'No role'}
                         </span>
                       </td>
@@ -194,28 +194,28 @@ export default function EmployeesPage() {
                           {emp.is_online ? (
                             <>
                               <span className="h-2 w-2 bg-green-500 rounded-full" />
-                              <span className="text-sm text-green-700">Online</span>
+                              <span className="text-sm text-green-700 dark:text-green-400">Online</span>
                             </>
                           ) : emp.is_active ? (
                             <>
                               <span className="h-2 w-2 bg-gray-400 rounded-full" />
-                              <span className="text-sm text-gray-600">Offline</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">Offline</span>
                             </>
                           ) : (
                             <>
                               <span className="h-2 w-2 bg-red-500 rounded-full" />
-                              <span className="text-sm text-red-700">Inactive</span>
+                              <span className="text-sm text-red-700 dark:text-red-400">Inactive</span>
                             </>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {emp.last_login_at
                           ? new Date(emp.last_login_at).toLocaleDateString()
                           : 'Never'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium">
                           Edit
                         </button>
                       </td>
