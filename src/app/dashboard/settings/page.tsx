@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
 
 type Tab = 'overview' | 'general' | 'secrets' | 'integrations'
@@ -13,7 +14,8 @@ type Tab = 'overview' | 'general' | 'secrets' | 'integrations'
 export default function SettingsPage() {
   const { business: businessData, employee, refetch } = useBusinessContext()
   const business = businessData as any // Type assertion for encrypted fields
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<Tab>((searchParams.get('tab') as Tab) || 'overview')
   const [settings, setSettings] = useState<any>({})
   const [secrets, setSecrets] = useState<any>({})
   const [saving, setSaving] = useState(false)
