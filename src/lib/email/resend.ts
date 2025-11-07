@@ -5,7 +5,8 @@
 
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend only if API key is available (avoid build-time errors)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export type EmailTemplate = 'password-reset' | 'employee-invite' | 'email-verification' | 'booking-confirmation'
 
@@ -20,6 +21,11 @@ export interface EmailOptions {
  * Send email via Resend
  */
 export async function sendEmail(options: EmailOptions) {
+  if (!resend) {
+    console.warn('⚠️ Resend not configured - email not sent:', options.subject)
+    return { success: false, error: 'Email service not configured' }
+  }
+
   try {
     const { data, error } = await resend.emails.send({
       from: options.from || process.env.EMAIL_FROM || 'noreply@samia-tarot-app.vercel.app',
