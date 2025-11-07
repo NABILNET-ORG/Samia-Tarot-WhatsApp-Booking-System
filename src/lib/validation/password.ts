@@ -9,11 +9,11 @@ export type PasswordValidationResult = {
 }
 
 export const PASSWORD_REQUIREMENTS = {
-  minLength: 12,
+  minLength: 8,
   requireUppercase: true,
   requireLowercase: true,
   requireNumbers: true,
-  requireSpecialChars: true,
+  requireSpecialChars: false, // Optional for temporary passwords
   specialChars: '!@#$%^&*()_+-=[]{}|;:,.<>?',
 }
 
