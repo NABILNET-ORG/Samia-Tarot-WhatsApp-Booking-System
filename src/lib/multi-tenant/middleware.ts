@@ -134,13 +134,81 @@ export async function requireBusinessContext(
     )
   }
 
-  // Check subscription status
-  if (context.business.subscription_tier === 'free') {
-    // Check usage limits for free tier
-    // TODO: Implement usage limit checking
+  // Check subscription status and usage limits
+  const usageCheck = await checkUsageLimits(context)
+  if (!usageCheck.allowed) {
+    return NextResponse.json(
+      {
+        error: 'Usage limit exceeded',
+        message: usageCheck.message,
+        current_usage: usageCheck.current,
+        limit: usageCheck.limit,
+      },
+      { status: 429 }
+    )
   }
 
   return handler(context, request)
+}
+
+/**
+ * Check usage limits based on subscription tier
+ */
+async function checkUsageLimits(context: BusinessContext): Promise<{
+  allowed: boolean
+  message?: string
+  current?: number
+  limit?: number
+}> {
+  try {
+    // Get subscription tier limits
+    const { data: subscription } = await supabaseAdmin
+      .from('subscriptions')
+      .select('plan_max_conversations_monthly, plan_name')
+      .eq('business_id', context.business.id)
+      .eq('status', 'active')
+      .single()
+
+    // If no active subscription or unlimited plan, allow
+    if (!subscription || subscription.plan_max_conversations_monthly === -1) {
+      return { allowed: true }
+    }
+
+    // Count conversations this month
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+
+    const { count, error } = await supabaseAdmin
+      .from('conversations')
+      .select('id', { count: 'exact', head: true })
+      .eq('business_id', context.business.id)
+      .gte('created_at', startOfMonth.toISOString())
+
+    if (error) {
+      console.error('Error checking usage limits:', error)
+      // On error, allow the request to proceed
+      return { allowed: true }
+    }
+
+    const currentUsage = count || 0
+    const limit = subscription.plan_max_conversations_monthly
+
+    if (currentUsage >= limit) {
+      return {
+        allowed: false,
+        message: `Monthly conversation limit reached (${limit} conversations). Upgrade your plan to continue.`,
+        current: currentUsage,
+        limit: limit,
+      }
+    }
+
+    return { allowed: true, current: currentUsage, limit: limit }
+  } catch (error: any) {
+    console.error('Usage limit check error:', error)
+    // On error, allow the request to proceed
+    return { allowed: true }
+  }
 }
 
 /**

@@ -248,9 +248,115 @@ export class CalendarHelpers {
    * Find slot closest to requested time
    */
   static findClosestSlot(slots: TimeSlot[], requestedTime: string): TimeSlot | null {
-    // TODO: Parse requested time and find closest match
-    // For now, return first available
-    return slots[0] || null
+    if (slots.length === 0) return null
+    if (!requestedTime) return slots[0]
+
+    try {
+      // Parse the requested time - handle various formats
+      const requestedDate = this.parseFlexibleDateTime(requestedTime)
+      if (!requestedDate) {
+        // If parsing fails, return first available slot
+        return slots[0]
+      }
+
+      // Find the slot with the closest start time
+      let closestSlot = slots[0]
+      let minDiff = Math.abs(new Date(slots[0].start).getTime() - requestedDate.getTime())
+
+      for (const slot of slots) {
+        const slotTime = new Date(slot.start).getTime()
+        const diff = Math.abs(slotTime - requestedDate.getTime())
+
+        if (diff < minDiff) {
+          minDiff = diff
+          closestSlot = slot
+        }
+      }
+
+      return closestSlot
+    } catch (error) {
+      console.error('Error finding closest slot:', error)
+      return slots[0]
+    }
+  }
+
+  /**
+   * Parse flexible date/time formats from natural language
+   */
+  private static parseFlexibleDateTime(input: string): Date | null {
+    try {
+      // Clean the input
+      const cleaned = input.toLowerCase().trim()
+
+      // Get current date/time
+      const now = new Date()
+
+      // Handle relative times
+      if (cleaned.includes('tomorrow')) {
+        const tomorrow = new Date(now)
+        tomorrow.setDate(tomorrow.getDate() + 1)
+
+        // Extract time if specified (e.g., "tomorrow at 3pm")
+        const timeMatch = cleaned.match(/at (\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i)
+        if (timeMatch) {
+          let hours = parseInt(timeMatch[1])
+          const minutes = timeMatch[2] ? parseInt(timeMatch[2]) : 0
+          const ampm = timeMatch[3]
+
+          if (ampm === 'pm' && hours < 12) hours += 12
+          if (ampm === 'am' && hours === 12) hours = 0
+
+          tomorrow.setHours(hours, minutes, 0, 0)
+        } else {
+          tomorrow.setHours(10, 0, 0, 0) // Default to 10 AM
+        }
+        return tomorrow
+      }
+
+      if (cleaned.includes('next week')) {
+        const nextWeek = new Date(now)
+        nextWeek.setDate(nextWeek.getDate() + 7)
+        nextWeek.setHours(10, 0, 0, 0)
+        return nextWeek
+      }
+
+      // Handle specific times (e.g., "3pm", "15:30", "3:30 PM")
+      const timeOnlyMatch = cleaned.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i)
+      if (timeOnlyMatch) {
+        const result = new Date(now)
+        let hours = parseInt(timeOnlyMatch[1])
+        const minutes = timeOnlyMatch[2] ? parseInt(timeOnlyMatch[2]) : 0
+        const ampm = timeOnlyMatch[3]
+
+        if (ampm === 'pm' && hours < 12) hours += 12
+        if (ampm === 'am' && hours === 12) hours = 0
+
+        result.setHours(hours, minutes, 0, 0)
+
+        // If the time is in the past, assume next day
+        if (result < now) {
+          result.setDate(result.getDate() + 1)
+        }
+
+        return result
+      }
+
+      // Handle ISO date strings
+      if (/^\d{4}-\d{2}-\d{2}/.test(cleaned)) {
+        return new Date(input)
+      }
+
+      // Try standard Date parsing
+      const parsed = new Date(input)
+      if (!isNaN(parsed.getTime())) {
+        return parsed
+      }
+
+      return null
+    } catch (error) {
+      console.error('Error parsing flexible datetime:', error)
+      return null
+    }
   }
 
   /**

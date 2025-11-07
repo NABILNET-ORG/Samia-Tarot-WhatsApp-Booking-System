@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { randomBytes } from 'crypto'
 import { rateLimit } from '@/lib/rate-limit'
+import { sendPasswordResetEmail } from '@/lib/email/resend'
 
 /**
  * POST /api/auth/forgot-password
@@ -88,36 +89,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate reset link
-    const resetUrl = `${request.nextUrl.origin}/reset-password?token=${token}`
+    // Get business name for email
+    const { data: business } = await supabaseAdmin
+      .from('businesses')
+      .select('business_name')
+      .eq('id', employee.business_id)
+      .single()
 
-    // TODO: Send email (integrate with SendGrid, Resend, or Postmark)
-    // For now, just log the reset link
-    console.log(`
+    const businessName = business?.business_name || 'WhatsApp AI Platform'
+
+    // Send password reset email
+    try {
+      await sendPasswordResetEmail(employee.email, token, businessName)
+      console.log(`✅ Password reset email sent to ${employee.email}`)
+    } catch (emailError: any) {
+      console.error('Failed to send password reset email:', emailError)
+      // Log error but still return success (don't reveal if email exists)
+      console.log(`
 ===============================================
-🔐 PASSWORD RESET REQUESTED
+🔐 PASSWORD RESET REQUESTED (EMAIL FAILED)
 ===============================================
 Employee: ${employee.full_name} (${employee.email})
-Reset Link: ${resetUrl}
+Reset Token: ${token}
 Expires: ${expiresAt.toLocaleString()}
+Error: ${emailError.message}
 ===============================================
-    `)
-
-    // In production, send actual email:
-    /*
-    await sendEmail({
-      to: employee.email,
-      subject: 'Reset Your Password',
-      html: `
-        <h2>Password Reset Request</h2>
-        <p>Hi ${employee.full_name},</p>
-        <p>You requested to reset your password. Click the link below to reset it:</p>
-        <p><a href="${resetUrl}">Reset Password</a></p>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      `
-    })
-    */
+      `)
+    }
 
     return successResponse
   } catch (error: any) {

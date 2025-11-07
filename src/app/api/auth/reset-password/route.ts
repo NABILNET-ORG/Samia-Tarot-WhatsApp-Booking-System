@@ -101,8 +101,18 @@ export async function POST(request: NextRequest) {
       .update({ used_at: new Date().toISOString() })
       .eq('token', token)
 
-    // TODO: Invalidate all existing sessions for this employee
-    // This would require implementing a session blacklist
+    // Invalidate all existing sessions for this employee
+    const { error: sessionError } = await supabaseAdmin
+      .from('active_sessions')
+      .delete()
+      .eq('employee_id', employee.id)
+
+    if (sessionError) {
+      console.error('Failed to invalidate sessions:', sessionError)
+      // Don't fail the request, but log the error
+    } else {
+      console.log(`✅ Invalidated all sessions for employee: ${employee.email}`)
+    }
 
     console.log(`✅ Password reset successful for employee: ${employee.email}`)
 

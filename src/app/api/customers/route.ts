@@ -16,15 +16,15 @@ export async function GET(request: NextRequest) {
       const searchParams = request.nextUrl.searchParams
       const search = searchParams.get('search')
       const vipOnly = searchParams.get('vip') === 'true'
+      const page = parseInt(searchParams.get('page') || '1')
       const limit = parseInt(searchParams.get('limit') || '50')
-      const offset = parseInt(searchParams.get('offset') || '0')
+      const offset = (page - 1) * limit
 
       let query = supabaseAdmin
         .from('customers')
         .select('*, bookings(count)', { count: 'exact' })
         .eq('business_id', context.business.id)
         .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
 
       if (search) {
         query = query.or(`name_english.ilike.%${search}%,name_arabic.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`)
@@ -34,11 +34,22 @@ export async function GET(request: NextRequest) {
         query = query.eq('vip_status', true)
       }
 
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1)
+
       const { data: customers, error, count } = await query
 
       if (error) throw error
 
-      return NextResponse.json({ customers, total: count })
+      return NextResponse.json({
+        customers: customers || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          total_pages: Math.ceil((count || 0) / limit),
+        },
+      })
     } catch (error: any) {
       return NextResponse.json(
         { error: 'Failed to fetch customers', message: error.message },

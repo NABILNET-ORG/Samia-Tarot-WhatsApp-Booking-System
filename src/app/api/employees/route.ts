@@ -8,6 +8,7 @@ import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
 import { hashPassword } from '@/lib/auth/session'
 import { validatePassword } from '@/lib/validation/password'
+import { sendEmployeeInviteEmail } from '@/lib/email/resend'
 
 /**
  * GET /api/employees - List employees in business
@@ -141,6 +142,31 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (error) throw error
+
+      // Get business name and inviter name for email
+      const { data: business } = await supabaseAdmin
+        .from('businesses')
+        .select('business_name')
+        .eq('id', context.business.id)
+        .single()
+
+      const businessName = business?.business_name || context.business.business_name || 'WhatsApp AI Platform'
+
+      // Send employee invite email
+      try {
+        await sendEmployeeInviteEmail(
+          email,
+          full_name,
+          businessName,
+          temporary_password,
+          context.employee.full_name
+        )
+        console.log(`✅ Employee invite email sent to ${email}`)
+      } catch (emailError: any) {
+        console.error('Failed to send employee invite email:', emailError)
+        // Log error but don't fail the request
+        console.log(`⚠️ Employee created but email failed: ${emailError.message}`)
+      }
 
       // Remove password hash from response
       const { password_hash: _, ...sanitized } = employee

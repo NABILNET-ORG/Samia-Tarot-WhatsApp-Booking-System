@@ -10,29 +10,58 @@ export async function GET(request: NextRequest) {
     try {
       const format = request.nextUrl.searchParams.get('format') || 'json'
       const type = request.nextUrl.searchParams.get('type') || 'conversations'
+      const startDate = request.nextUrl.searchParams.get('start_date')
+      const endDate = request.nextUrl.searchParams.get('end_date')
 
       let data: any[] = []
-      
+
       if (type === 'conversations') {
-        const { data: conversations } = await supabaseAdmin
+        let query = supabaseAdmin
           .from('conversations')
           .select('*, customer:customers(*), messages(count)')
           .eq('business_id', context.business.id)
-          .order('created_at', { ascending: false })
+
+        if (startDate) {
+          query = query.gte('created_at', startDate)
+        }
+        if (endDate) {
+          query = query.lte('created_at', endDate)
+        }
+
+        query = query.order('created_at', { ascending: false })
+        const { data: conversations } = await query
         data = conversations || []
       } else if (type === 'bookings') {
-        const { data: bookings } = await supabaseAdmin
+        let query = supabaseAdmin
           .from('bookings')
           .select('*, customer:customers(*), service:services(*)')
           .eq('business_id', context.business.id)
-          .order('created_at', { ascending: false })
+
+        if (startDate) {
+          query = query.gte('created_at', startDate)
+        }
+        if (endDate) {
+          query = query.lte('created_at', endDate)
+        }
+
+        query = query.order('created_at', { ascending: false })
+        const { data: bookings } = await query
         data = bookings || []
       } else if (type === 'customers') {
-        const { data: customers } = await supabaseAdmin
+        let query = supabaseAdmin
           .from('customers')
           .select('*')
           .eq('business_id', context.business.id)
-          .order('created_at', { ascending: false })
+
+        if (startDate) {
+          query = query.gte('created_at', startDate)
+        }
+        if (endDate) {
+          query = query.lte('created_at', endDate)
+        }
+
+        query = query.order('created_at', { ascending: false })
+        const { data: customers } = await query
         data = customers || []
       }
 

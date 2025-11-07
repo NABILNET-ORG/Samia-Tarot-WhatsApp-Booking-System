@@ -11,24 +11,36 @@ export async function GET(request: NextRequest) {
     try {
       const searchParams = request.nextUrl.searchParams
       const status = searchParams.get('status')
+      const page = parseInt(searchParams.get('page') || '1')
       const limit = parseInt(searchParams.get('limit') || '50')
+      const offset = (page - 1) * limit
 
       let query = supabaseAdmin
         .from('bookings')
-        .select('*, customers(name_english, phone), services(name_english)')
+        .select('*, customers(name_english, phone), services(name_english)', { count: 'exact' })
         .eq('business_id', context.business.id)
         .order('created_at', { ascending: false })
-        .limit(limit)
 
       if (status) {
         query = query.eq('status', status)
       }
 
-      const { data: bookings, error } = await query
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1)
+
+      const { data: bookings, error, count } = await query
 
       if (error) throw error
 
-      return NextResponse.json({ bookings })
+      return NextResponse.json({
+        bookings: bookings || [],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          total_pages: Math.ceil((count || 0) / limit),
+        },
+      })
     } catch (error: any) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
