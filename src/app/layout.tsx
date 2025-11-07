@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const cairo = Cairo({ subsets: ['arabic'], variable: '--font-cairo' })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://samia-tarot-app.vercel.app'),
   title: 'Samia Tarot - Spiritual Readings',
   description: 'Professional Coffee Cup, Tarot, and Rune readings by Samia. Book your spiritual guidance session.',
   manifest: '/manifest.json',
