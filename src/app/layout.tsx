@@ -47,13 +47,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="h-full">
       <head>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
-      <body className={`${inter.variable} ${cairo.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${cairo.variable} font-sans antialiased h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
         {children}
       </body>
     </html>
