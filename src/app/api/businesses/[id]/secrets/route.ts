@@ -74,7 +74,7 @@ export async function GET(
       google_client_id: business.google_client_id_encrypted ? decryptApiKey(business.google_client_id_encrypted, businessId) : '',
       google_client_secret: business.google_client_secret_encrypted ? decryptApiKey(business.google_client_secret_encrypted, businessId) : '',
       google_refresh_token: business.google_refresh_token_encrypted ? decryptApiKey(business.google_refresh_token_encrypted, businessId) : '',
-      google_calendar_id: business.google_calendar_id || '',
+      // Note: google_calendar_id is not a secret, available via general settings API
     }
 
     return NextResponse.json({ secrets })
@@ -141,7 +141,7 @@ export async function PATCH(
       if (body.google_client_id) updates.google_client_id_encrypted = encryptApiKey(body.google_client_id, businessId)
       if (body.google_client_secret) updates.google_client_secret_encrypted = encryptApiKey(body.google_client_secret, businessId)
       if (body.google_refresh_token) updates.google_refresh_token_encrypted = encryptApiKey(body.google_refresh_token, businessId)
-      if (body.google_calendar_id) updates.google_calendar_id = body.google_calendar_id
+      // Note: google_calendar_id is not encrypted, save via general settings API instead
     } catch (encryptError: any) {
       console.error('Encryption error:', encryptError)
       return NextResponse.json({
