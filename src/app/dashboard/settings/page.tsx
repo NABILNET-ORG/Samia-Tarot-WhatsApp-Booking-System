@@ -485,7 +485,7 @@ export default function SettingsPage() {
                     type="tel"
                     value={secrets.twilio_whatsapp_number || ''}
                     onChange={(e) => setSecrets({...secrets, twilio_whatsapp_number: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="+14155238886"
                   />
                 </div>
@@ -573,9 +573,9 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Calendar ID (Email)</label>
                   <input
                     type="email"
-                    value={secrets.google_calendar_id || ''}
+                    value={secrets.google_calendar_id || business?.google_calendar_id || ''}
                     onChange={(e) => setSecrets({...secrets, google_calendar_id: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="youremail@gmail.com"
                   />
                 </div>

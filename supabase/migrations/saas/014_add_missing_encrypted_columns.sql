@@ -25,6 +25,7 @@ ALTER TABLE businesses ADD COLUMN IF NOT EXISTS stripe_webhook_secret_encrypted 
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS google_client_id_encrypted TEXT;
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS google_client_secret_encrypted TEXT;
 ALTER TABLE businesses ADD COLUMN IF NOT EXISTS google_refresh_token_encrypted TEXT;
+ALTER TABLE businesses ADD COLUMN IF NOT EXISTS google_calendar_id TEXT;
 
 -- Create indexes for webhook routing
 CREATE INDEX IF NOT EXISTS idx_businesses_whatsapp_phone_id
