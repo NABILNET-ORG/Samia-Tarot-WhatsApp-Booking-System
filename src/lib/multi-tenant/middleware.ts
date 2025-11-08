@@ -219,6 +219,12 @@ export function hasPermission(
   resource: string,
   action: string
 ): boolean {
+  // Admin and Owner roles have all permissions (case-insensitive)
+  const roleName = context.employee.role_name?.toLowerCase() || ''
+  if (['admin', 'owner'].includes(roleName)) {
+    return true
+  }
+
   const permissions = context.employee.permissions
 
   // Navigate nested permission object
