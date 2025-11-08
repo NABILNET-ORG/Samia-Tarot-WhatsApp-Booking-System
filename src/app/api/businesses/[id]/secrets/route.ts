@@ -65,7 +65,7 @@ export async function GET(
       openai_api_key: business.openai_api_key_encrypted ? decryptApiKey(business.openai_api_key_encrypted, businessId) : '',
 
       // Meta WhatsApp
-      meta_phone_id: business.meta_phone_id || '',
+      meta_phone_id: business.whatsapp_phone_number_id || business.meta_phone_id || '',
       meta_access_token: business.meta_access_token_encrypted ? decryptApiKey(business.meta_access_token_encrypted, businessId) : '',
       meta_app_secret: business.meta_app_secret_encrypted ? decryptApiKey(business.meta_app_secret_encrypted, businessId) : '',
       meta_verify_token: business.meta_verify_token_encrypted ? decryptApiKey(business.meta_verify_token_encrypted, businessId) : '',
@@ -129,13 +129,11 @@ export async function PATCH(
       if (body.openai_api_key) updates.openai_api_key_encrypted = encryptApiKey(body.openai_api_key, businessId)
 
       // Meta WhatsApp
-      if (body.meta_phone_id) updates.meta_phone_id = body.meta_phone_id
+      // Note: meta_phone_id is stored in whatsapp_phone_number_id column for webhook routing
+      if (body.meta_phone_id) updates.whatsapp_phone_number_id = body.meta_phone_id
       if (body.meta_access_token) updates.meta_access_token_encrypted = encryptApiKey(body.meta_access_token, businessId)
       if (body.meta_app_secret) updates.meta_app_secret_encrypted = encryptApiKey(body.meta_app_secret, businessId)
       if (body.meta_verify_token) updates.meta_verify_token_encrypted = encryptApiKey(body.meta_verify_token, businessId)
-
-      // Also update whatsapp_phone_number_id for webhook routing
-      if (body.meta_phone_id) updates.whatsapp_phone_number_id = body.meta_phone_id
 
       // Twilio
       if (body.twilio_account_sid) updates.twilio_account_sid_encrypted = encryptApiKey(body.twilio_account_sid, businessId)
