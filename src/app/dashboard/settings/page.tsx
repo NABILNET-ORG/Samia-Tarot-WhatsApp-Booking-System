@@ -257,7 +257,7 @@ export default function SettingsPage() {
         {activeTab === 'general' && (
           <form onSubmit={handleSaveSettings} className="space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Business Information</h2>
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white text-gray-900 dark:text-white">Business Information</h2>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Business Name</label>
@@ -288,7 +288,7 @@ export default function SettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timezone</label>
                   <select
                     value={settings.timezone || business?.timezone || 'UTC'}
                     onChange={(e) => setSettings({...settings, timezone: e.target.value})}
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Support Email</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Email</label>
                     <input
                       type="email"
                       value={settings.support_email || business?.support_email || ''}
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Support Phone</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Support Phone</label>
                     <input
                       type="tel"
                       value={settings.support_phone || business?.support_phone || ''}
@@ -326,11 +326,11 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">Branding</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Branding</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Primary Color</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primary Color</label>
                   <input
                     type="color"
                     value={settings.primary_color || business?.primary_color || '#6B46C1'}
@@ -339,7 +339,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo URL</label>
                   <input
                     type="url"
                     value={settings.logo_url || business?.logo_url || ''}
@@ -364,18 +364,18 @@ export default function SettingsPage() {
         {/* Secrets Tab - Admin Only */}
         {activeTab === 'secrets' && isAdmin && (
           <form onSubmit={handleSaveSecrets} className="space-y-6">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-yellow-800">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
                 <strong>⚠️ Admin Only:</strong> These credentials are encrypted in the database. Only Admin and Owner roles can view and edit secrets.
               </p>
             </div>
 
             {/* OpenAI */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">🤖 OpenAI Configuration</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">🤖 OpenAI Configuration</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     OpenAI API Key
                     <a href="https://platform.openai.com/api-keys" target="_blank" className="ml-2 text-blue-500 text-xs">Get Key →</a>
                   </label>
@@ -383,7 +383,7 @@ export default function SettingsPage() {
                     type="password"
                     value={secrets.openai_api_key || ''}
                     onChange={(e) => setSecrets({...secrets, openai_api_key: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="sk-proj-..."
                   />
                 </div>
@@ -391,11 +391,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Meta WhatsApp */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">📱 Meta WhatsApp Configuration</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">📱 Meta WhatsApp Configuration</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Phone Number ID
                     <a href="https://developers.facebook.com" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Meta →</a>
                   </label>
@@ -403,37 +403,37 @@ export default function SettingsPage() {
                     type="text"
                     value={secrets.meta_phone_id || ''}
                     onChange={(e) => setSecrets({...secrets, meta_phone_id: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="123456789012345"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Access Token (Permanent)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Access Token (Permanent)</label>
                   <input
                     type="password"
                     value={secrets.meta_access_token || ''}
                     onChange={(e) => setSecrets({...secrets, meta_access_token: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="EAAK..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">App Secret</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">App Secret</label>
                   <input
                     type="password"
                     value={secrets.meta_app_secret || ''}
                     onChange={(e) => setSecrets({...secrets, meta_app_secret: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="abc123def456..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Webhook Verify Token</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Webhook Verify Token</label>
                   <input
                     type="text"
                     value={secrets.meta_verify_token || ''}
                     onChange={(e) => setSecrets({...secrets, meta_verify_token: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="your_secret_verify_token"
                   />
                 </div>
@@ -441,11 +441,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Twilio */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">📞 Twilio Configuration</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">📞 Twilio Configuration</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Account SID
                     <a href="https://console.twilio.com" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Twilio →</a>
                   </label>
@@ -453,22 +453,22 @@ export default function SettingsPage() {
                     type="text"
                     value={secrets.twilio_account_sid || ''}
                     onChange={(e) => setSecrets({...secrets, twilio_account_sid: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="AC..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Auth Token</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Auth Token</label>
                   <input
                     type="password"
                     value={secrets.twilio_auth_token || ''}
                     onChange={(e) => setSecrets({...secrets, twilio_auth_token: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="abc123..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp Phone Number</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">WhatsApp Phone Number</label>
                   <input
                     type="tel"
                     value={secrets.twilio_whatsapp_number || ''}
@@ -481,11 +481,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Stripe */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">💳 Stripe Configuration</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">💳 Stripe Configuration</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Secret Key
                     <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Stripe →</a>
                   </label>
@@ -493,27 +493,27 @@ export default function SettingsPage() {
                     type="password"
                     value={secrets.stripe_secret_key || ''}
                     onChange={(e) => setSecrets({...secrets, stripe_secret_key: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="sk_live_..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Publishable Key</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Publishable Key</label>
                   <input
                     type="text"
                     value={secrets.stripe_publishable_key || ''}
                     onChange={(e) => setSecrets({...secrets, stripe_publishable_key: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="pk_live_..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Webhook Secret</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Webhook Secret</label>
                   <input
                     type="password"
                     value={secrets.stripe_webhook_secret || ''}
                     onChange={(e) => setSecrets({...secrets, stripe_webhook_secret: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="whsec_..."
                   />
                 </div>
@@ -521,11 +521,11 @@ export default function SettingsPage() {
             </div>
 
             {/* Google APIs */}
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">📅 Google APIs Configuration</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">📅 Google APIs Configuration</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Client ID
                     <a href="https://console.cloud.google.com" target="_blank" className="ml-2 text-blue-500 text-xs">Get from Google Cloud →</a>
                   </label>
@@ -533,32 +533,32 @@ export default function SettingsPage() {
                     type="text"
                     value={secrets.google_client_id || ''}
                     onChange={(e) => setSecrets({...secrets, google_client_id: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="123456789-abc.apps.googleusercontent.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Client Secret</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Client Secret</label>
                   <input
                     type="password"
                     value={secrets.google_client_secret || ''}
                     onChange={(e) => setSecrets({...secrets, google_client_secret: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="GOCSPX-..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Refresh Token</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Refresh Token</label>
                   <input
                     type="password"
                     value={secrets.google_refresh_token || ''}
                     onChange={(e) => setSecrets({...secrets, google_refresh_token: e.target.value})}
-                    className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
                     placeholder="1//..."
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Calendar ID (Email)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Calendar ID (Email)</label>
                   <input
                     type="email"
                     value={secrets.google_calendar_id || ''}
@@ -583,8 +583,8 @@ export default function SettingsPage() {
         {/* Integrations Tab */}
         {activeTab === 'integrations' && (
           <div className="space-y-6">
-            <div className="bg-white rounded-lg border p-6">
-              <h2 className="text-xl font-bold mb-4">📋 Integration Status</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">📋 Integration Status</h2>
               <div className="space-y-3">
                 <IntegrationRow name="OpenAI GPT-4" status={systemStatus.openai} />
                 <IntegrationRow name="Meta WhatsApp" status={systemStatus.meta} />
