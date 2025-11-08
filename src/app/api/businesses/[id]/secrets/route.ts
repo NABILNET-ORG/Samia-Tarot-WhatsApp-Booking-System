@@ -7,9 +7,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
 import { encryptApiKey, decryptApiKey } from '@/lib/encryption/keys'
+import { Pool } from 'pg'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+
+// Direct PostgreSQL connection to bypass PostgREST schema cache
+const getDbPool = () => {
+  const connectionString = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL
+  if (!connectionString) {
+    throw new Error('DATABASE_URL not configured')
+  }
+  return new Pool({ connectionString, max: 1 })
+}
 
 /**
  * GET /api/businesses/[id]/secrets
@@ -150,21 +160,39 @@ export async function PATCH(
       }, { status: 500 })
     }
 
-    // Update database
-    const { error } = await supabaseAdmin
-      .from('businesses')
-      .update(updates)
-      .eq('id', params.id)
-
-    if (error) {
-      console.error('Failed to update secrets:', error)
-      return NextResponse.json({
-        error: 'Failed to save secrets',
-        details: error.message,
-        code: error.code
-      }, { status: 500 })
+    // Update database using direct PostgreSQL to bypass PostgREST schema cache
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ message: 'No secrets to update' }, { status: 200 })
     }
 
-    return NextResponse.json({ message: 'Secrets saved successfully', updated: Object.keys(updates).length })
+    const pool = getDbPool()
+    let client
+
+    try {
+      client = await pool.connect()
+
+      // Build SET clause dynamically
+      const setClauses = Object.keys(updates).map((key, index) => `"${key}" = $${index + 2}`)
+      const values = Object.values(updates)
+
+      const sql = `
+        UPDATE businesses
+        SET ${setClauses.join(', ')}, updated_at = NOW()
+        WHERE id = $1
+      `
+
+      await client.query(sql, [params.id, ...values])
+
+      return NextResponse.json({ message: 'Secrets saved successfully', updated: Object.keys(updates).length })
+    } catch (dbError: any) {
+      console.error('Database error:', dbError)
+      return NextResponse.json({
+        error: 'Failed to save secrets',
+        details: dbError.message
+      }, { status: 500 })
+    } finally {
+      if (client) client.release()
+      await pool.end()
+    }
   })
 }
