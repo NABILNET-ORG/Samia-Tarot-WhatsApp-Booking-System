@@ -1,17 +1,16 @@
 /**
  * 🎨 Theme Provider
- * Manages dark/light/system theme preferences
+ * Manages dark/light theme preferences (simplified - no system theme)
  */
 
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type Theme = 'light' | 'dark' | 'system'
+type Theme = 'light' | 'dark'
 
 type ThemeContextType = {
   theme: Theme
-  effectiveTheme: 'light' | 'dark'
   setTheme: (theme: Theme) => void
 }
 
@@ -19,51 +18,28 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light')
-  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
     // Load theme from localStorage (default to light if not set)
-    const savedTheme = localStorage.getItem('theme') as Theme | null
-    if (savedTheme) {
-      setThemeState(savedTheme)
+    const savedTheme = localStorage.getItem('theme') as string | null
+
+    // Migrate from old 'system' theme or invalid values to 'light'
+    if (savedTheme === 'dark') {
+      setThemeState('dark')
     } else {
-      // First time - default to light mode
+      // Default to light for: null, 'light', 'system', or any other value
+      setThemeState('light')
       localStorage.setItem('theme', 'light')
     }
   }, [])
 
   useEffect(() => {
-    const updateEffectiveTheme = () => {
-      let newTheme: 'light' | 'dark'
-
-      if (theme === 'system') {
-        newTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      } else {
-        newTheme = theme
-      }
-
-      setEffectiveTheme(newTheme)
-
-      // Update document class
-      if (newTheme === 'dark') {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
+    // Update document class
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
     }
-
-    updateEffectiveTheme()
-
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    const handleChange = () => {
-      if (theme === 'system') {
-        updateEffectiveTheme()
-      }
-    }
-
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
   }, [theme])
 
   const setTheme = (newTheme: Theme) => {
@@ -72,7 +48,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, effectiveTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   )
