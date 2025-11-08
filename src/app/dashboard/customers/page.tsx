@@ -48,6 +48,13 @@ export default function CustomersPage() {
   }
 
   async function handleCreate() {
+    // Validate phone number
+    const phoneRegex = /^[+]?[\d\s-()]{7,}$/
+    if (!phoneRegex.test(formData.phone)) {
+      alert('❌ Invalid phone number format')
+      return
+    }
+
     try {
       const response = await fetch('/api/customers', {
         method: 'POST',
@@ -70,6 +77,14 @@ export default function CustomersPage() {
 
   async function handleUpdate() {
     if (!selectedCustomer) return
+
+    // Validate phone number
+    const phoneRegex = /^[+]?[\d\s-()]{7,}$/
+    if (!phoneRegex.test(formData.phone)) {
+      alert('❌ Invalid phone number format')
+      return
+    }
+
     try {
       const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
         method: 'PATCH',

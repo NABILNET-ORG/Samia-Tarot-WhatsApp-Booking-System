@@ -5,6 +5,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { z } from 'zod'
+
+// Validation schema for creating bookings
+const createBookingSchema = z.object({
+  customer_id: z.string().uuid('Invalid customer ID'),
+  service_id: z.string().uuid('Invalid service ID'),
+  scheduled_at: z.string().datetime('Invalid datetime format'),
+  duration_minutes: z.number().int().positive('Duration must be positive'),
+  price: z.number().positive('Price must be positive'),
+  payment_method: z.enum(['stripe', 'western_union', 'cash', 'other']).optional(),
+  payment_status: z.enum(['pending', 'paid', 'refunded']).default('pending'),
+  status: z.enum(['pending', 'confirmed', 'completed', 'cancelled', 'no_show']).default('pending'),
+  notes: z.string().max(1000, 'Notes too long').optional(),
+})
 
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
@@ -52,10 +66,13 @@ export async function POST(request: NextRequest) {
     try {
       const body = await request.json()
 
+      // Validate input with Zod
+      const validatedData = createBookingSchema.parse(body)
+
       const { data: booking, error } = await supabaseAdmin
         .from('bookings')
         .insert({
-          ...body,
+          ...validatedData,
           business_id: context.business.id,
         })
         .select()
@@ -65,6 +82,12 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({ booking, message: 'Booking created' })
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: error.issues },
+          { status: 400 }
+        )
+      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
   })
