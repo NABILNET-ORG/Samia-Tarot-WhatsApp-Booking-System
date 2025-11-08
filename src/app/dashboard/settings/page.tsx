@@ -42,13 +42,21 @@ export default function SettingsPage() {
     }
   }, [business])
 
+  // Update system status when secrets change
+  useEffect(() => {
+    if (secrets && Object.keys(secrets).length > 0) {
+      checkSystemStatus()
+    }
+  }, [secrets])
+
   async function checkSystemStatus() {
+    // Check based on loaded secrets (from secrets API) for accuracy
     setSystemStatus({
-      openai: !!business?.openai_api_key_encrypted,
-      meta: !!business?.whatsapp_phone_number_id || !!business?.meta_phone_id,
-      twilio: !!business?.twilio_phone_number,
-      stripe: !!business?.stripe_secret_key_encrypted,
-      google: !!business?.google_client_id_encrypted,
+      openai: !!secrets?.openai_api_key || !!business?.openai_api_key_encrypted,
+      meta: !!secrets?.meta_phone_id || !!secrets?.meta_access_token || !!business?.whatsapp_phone_number_id,
+      twilio: !!secrets?.twilio_account_sid || !!business?.twilio_account_sid_encrypted,
+      stripe: !!secrets?.stripe_secret_key || !!business?.stripe_secret_key_encrypted,
+      google: !!secrets?.google_client_id || !!business?.google_client_id_encrypted,
       supabase: true
     })
     setCurrentProvider(business?.whatsapp_provider || 'meta')
@@ -115,7 +123,11 @@ export default function SettingsPage() {
     try {
       const response = await fetch('/api/businesses/' + business?.id + '/secrets')
       const data = await response.json()
-      if (data.secrets) setSecrets(data.secrets)
+      if (data.secrets) {
+        setSecrets(data.secrets)
+        // Update system status after loading secrets
+        checkSystemStatus()
+      }
     } catch (error) {
       console.error(error)
     }
