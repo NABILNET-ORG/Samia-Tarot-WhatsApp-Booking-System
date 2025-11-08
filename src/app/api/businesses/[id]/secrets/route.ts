@@ -114,33 +114,41 @@ export async function PATCH(
     // Encrypt all secrets before storing
     const updates: any = {}
 
-    // OpenAI
-    if (body.openai_api_key) updates.openai_api_key_encrypted = encryptApiKey(body.openai_api_key, businessId)
+    try {
+      // OpenAI
+      if (body.openai_api_key) updates.openai_api_key_encrypted = encryptApiKey(body.openai_api_key, businessId)
 
-    // Meta WhatsApp
-    if (body.meta_phone_id) updates.meta_phone_id = body.meta_phone_id
-    if (body.meta_access_token) updates.meta_access_token_encrypted = encryptApiKey(body.meta_access_token, businessId)
-    if (body.meta_app_secret) updates.meta_app_secret_encrypted = encryptApiKey(body.meta_app_secret, businessId)
-    if (body.meta_verify_token) updates.meta_verify_token_encrypted = encryptApiKey(body.meta_verify_token, businessId)
+      // Meta WhatsApp
+      if (body.meta_phone_id) updates.meta_phone_id = body.meta_phone_id
+      if (body.meta_access_token) updates.meta_access_token_encrypted = encryptApiKey(body.meta_access_token, businessId)
+      if (body.meta_app_secret) updates.meta_app_secret_encrypted = encryptApiKey(body.meta_app_secret, businessId)
+      if (body.meta_verify_token) updates.meta_verify_token_encrypted = encryptApiKey(body.meta_verify_token, businessId)
 
-    // Also update whatsapp_phone_number_id for webhook routing
-    if (body.meta_phone_id) updates.whatsapp_phone_number_id = body.meta_phone_id
+      // Also update whatsapp_phone_number_id for webhook routing
+      if (body.meta_phone_id) updates.whatsapp_phone_number_id = body.meta_phone_id
 
-    // Twilio
-    if (body.twilio_account_sid) updates.twilio_account_sid_encrypted = encryptApiKey(body.twilio_account_sid, businessId)
-    if (body.twilio_auth_token) updates.twilio_auth_token_encrypted = encryptApiKey(body.twilio_auth_token, businessId)
-    if (body.twilio_whatsapp_number) updates.twilio_whatsapp_number = body.twilio_whatsapp_number
+      // Twilio
+      if (body.twilio_account_sid) updates.twilio_account_sid_encrypted = encryptApiKey(body.twilio_account_sid, businessId)
+      if (body.twilio_auth_token) updates.twilio_auth_token_encrypted = encryptApiKey(body.twilio_auth_token, businessId)
+      if (body.twilio_whatsapp_number) updates.twilio_whatsapp_number = body.twilio_whatsapp_number
 
-    // Stripe
-    if (body.stripe_secret_key) updates.stripe_secret_key_encrypted = encryptApiKey(body.stripe_secret_key, businessId)
-    if (body.stripe_publishable_key) updates.stripe_publishable_key = body.stripe_publishable_key
-    if (body.stripe_webhook_secret) updates.stripe_webhook_secret_encrypted = encryptApiKey(body.stripe_webhook_secret, businessId)
+      // Stripe
+      if (body.stripe_secret_key) updates.stripe_secret_key_encrypted = encryptApiKey(body.stripe_secret_key, businessId)
+      if (body.stripe_publishable_key) updates.stripe_publishable_key = body.stripe_publishable_key
+      if (body.stripe_webhook_secret) updates.stripe_webhook_secret_encrypted = encryptApiKey(body.stripe_webhook_secret, businessId)
 
-    // Google
-    if (body.google_client_id) updates.google_client_id_encrypted = encryptApiKey(body.google_client_id, businessId)
-    if (body.google_client_secret) updates.google_client_secret_encrypted = encryptApiKey(body.google_client_secret, businessId)
-    if (body.google_refresh_token) updates.google_refresh_token_encrypted = encryptApiKey(body.google_refresh_token, businessId)
-    if (body.google_calendar_id) updates.google_calendar_id = body.google_calendar_id
+      // Google
+      if (body.google_client_id) updates.google_client_id_encrypted = encryptApiKey(body.google_client_id, businessId)
+      if (body.google_client_secret) updates.google_client_secret_encrypted = encryptApiKey(body.google_client_secret, businessId)
+      if (body.google_refresh_token) updates.google_refresh_token_encrypted = encryptApiKey(body.google_refresh_token, businessId)
+      if (body.google_calendar_id) updates.google_calendar_id = body.google_calendar_id
+    } catch (encryptError: any) {
+      console.error('Encryption error:', encryptError)
+      return NextResponse.json({
+        error: 'Failed to encrypt secrets',
+        details: encryptError.message
+      }, { status: 500 })
+    }
 
     // Update database
     const { error } = await supabaseAdmin
@@ -150,7 +158,11 @@ export async function PATCH(
 
     if (error) {
       console.error('Failed to update secrets:', error)
-      return NextResponse.json({ error: 'Failed to save secrets' }, { status: 500 })
+      return NextResponse.json({
+        error: 'Failed to save secrets',
+        details: error.message,
+        code: error.code
+      }, { status: 500 })
     }
 
     return NextResponse.json({ message: 'Secrets saved successfully', updated: Object.keys(updates).length })
