@@ -128,8 +128,8 @@ export default function SessionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400" />
       </div>
     )
   }
@@ -138,13 +138,13 @@ export default function SessionsPage() {
   const expiredSessions = sessions.filter(s => isSessionExpired(s.expires_at))
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Active Sessions</h1>
-            <p className="text-gray-600 mt-1">Manage your login sessions across devices</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Active Sessions</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your login sessions across devices</p>
           </div>
           {activeSessions.length > 1 && (
             <button
@@ -159,29 +159,29 @@ export default function SessionsPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Active Sessions</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Active Sessions</p>
             <p className="text-3xl font-bold text-green-600">{activeSessions.length}</p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Current Device</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Current Device</p>
             <p className="text-3xl font-bold text-blue-600">
               {getDeviceType(activeSessions.find(s => s.is_current)?.user_agent)}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-sm text-gray-600">Expired Sessions</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <p className="text-sm text-gray-600 dark:text-gray-400">Expired Sessions</p>
             <p className="text-3xl font-bold text-gray-600">{expiredSessions.length}</p>
           </div>
         </div>
 
         {/* Active Sessions List */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-6">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Active Sessions</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Active Sessions</h2>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {activeSessions.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 No active sessions
@@ -250,12 +250,12 @@ export default function SessionsPage() {
 
         {/* Expired Sessions */}
         {expiredSessions.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Expired Sessions</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Expired Sessions</h2>
             </div>
 
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-700">
               {expiredSessions.map((session) => (
                 <div key={session.id} className="p-4 opacity-60">
                   <div className="flex items-center gap-4">

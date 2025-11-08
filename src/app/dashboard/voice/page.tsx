@@ -62,17 +62,17 @@ export default function VoiceMessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Voice Messages</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Voice Messages</h1>
           <select
             value={filter}
             onChange={(e) => {
               setFilter(e.target.value)
               setPage(1)
             }}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
           >
             <option value="">All Messages</option>
             <option value="transcribed">Transcribed</option>
@@ -85,7 +85,7 @@ export default function VoiceMessagesPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="bg-white rounded-lg border p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
             <div className="text-6xl mb-4">🎤</div>
             <h3 className="text-xl font-semibold mb-2">No voice messages yet</h3>
             <p className="text-gray-600">Voice messages from customers will appear here</p>
@@ -94,7 +94,7 @@ export default function VoiceMessagesPage() {
           <>
             <div className="grid grid-cols-1 gap-4">
               {messages.map((message) => (
-                <div key={message.id} className="bg-white rounded-lg border p-6 hover:shadow-lg transition">
+                <div key={message.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg dark:hover:shadow-gray-700 transition">
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <h3 className="font-semibold text-lg">

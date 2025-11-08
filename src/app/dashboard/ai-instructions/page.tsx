@@ -185,35 +185,35 @@ export default function AIInstructionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading AI instructions...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-white mx-auto" />
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading AI instructions...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">🤖 AI Instructions & Prompts</h1>
-          <p className="text-gray-600 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🤖 AI Instructions & Prompts</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
             Configure how your AI assistant responds to customers. These instructions will guide the AI's behavior and tone.
           </p>
         </div>
 
         {/* Info Card */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
           <div className="flex items-start gap-3">
             <svg className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-1">How AI Instructions Work</h3>
-              <p className="text-sm text-blue-800">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-1">How AI Instructions Work</h3>
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 The AI uses these instructions as its "personality" and guidelines. Changes take effect immediately for all new conversations.
                 Be specific about your business context, desired tone, and any special handling rules.
               </p>
@@ -256,7 +256,7 @@ export default function AIInstructionsPage() {
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           {activeTab === 'basic' && (
             <div className="space-y-6">
               {/* Greeting Template */}

@@ -211,12 +211,12 @@ export default function NotesPage() {
     : notes.filter(note => note.note_type === filterType)
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Internal Notes</h1>
-          <p className="text-gray-600 mt-1">Private notes about conversations and customers</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Internal Notes</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Private notes about conversations and customers</p>
         </div>
 
         {/* Action Bar */}
@@ -264,7 +264,7 @@ export default function NotesPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
           </div>
         ) : filteredNotes.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -276,8 +276,8 @@ export default function NotesPage() {
             {filteredNotes.map((note) => (
               <div
                 key={note.id}
-                className={`bg-white rounded-lg border p-4 hover:border-blue-300 transition-colors ${
-                  note.is_important ? 'border-l-4 border-l-red-500' : 'border-gray-200'
+                className={`bg-white dark:bg-gray-800 rounded-lg border p-4 hover:border-blue-300 dark:hover:border-blue-500 transition-colors ${
+                  note.is_important ? 'border-l-4 border-l-red-500' : 'border-gray-200 dark:border-gray-700'
                 }`}
               >
                 <div className="flex items-start justify-between">

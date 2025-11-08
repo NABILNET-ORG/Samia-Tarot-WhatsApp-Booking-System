@@ -170,12 +170,12 @@ export default function MediaGalleryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Media Gallery</h1>
-          <p className="text-gray-600 mt-1">Upload and manage your media files</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Media Gallery</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Upload and manage your media files</p>
         </div>
 
         {/* Upload Area */}
@@ -186,8 +186,8 @@ export default function MediaGalleryPage() {
           onDrop={handleDrop}
           className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             dragActive
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-300 bg-white hover:border-gray-400'
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              : 'border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600'
           }`}
         >
           <input
@@ -255,7 +255,7 @@ export default function MediaGalleryPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
           </div>
         ) : files.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <svg
               className="mx-auto h-12 w-12 text-gray-400"
               fill="none"
@@ -277,7 +277,7 @@ export default function MediaGalleryPage() {
             {files.map((file) => (
               <div
                 key={file.id}
-                className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-blue-300 transition-colors"
+                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:border-blue-300 dark:hover:border-blue-500 transition-colors"
               >
                 {/* Preview */}
                 <div className="aspect-square bg-gray-100 flex items-center justify-center">
