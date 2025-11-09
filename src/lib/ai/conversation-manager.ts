@@ -224,7 +224,7 @@ ${context.customerEmail ? `Customer Email: ${context.customerEmail}` : ''}
       id: conversation.id,
       state: conversation.state,
       language: conversation.language,
-      messages: conversation.messages.map(m => ({
+      messages: conversation.messages.map((m: any) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
         timestamp: m.createdAt,
