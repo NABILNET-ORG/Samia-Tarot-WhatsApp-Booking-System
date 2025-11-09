@@ -94,51 +94,53 @@ export async function POST(request: NextRequest) {
         special_instructions,
       } = validatedData
 
-      // Validate required fields
-      if (!system_prompt || !greeting_template) {
+      // Check if instructions exist to determine if this is create or update
+      const { data: existing } = await supabaseAdmin
+        .from('ai_instructions')
+        .select('id, system_prompt, greeting_template')
+        .eq('business_id', context.business.id)
+        .single()
+
+      // For new instructions, require both fields
+      if (!existing && (!system_prompt || !greeting_template)) {
         return NextResponse.json(
-          { error: 'system_prompt and greeting_template are required' },
+          { error: 'system_prompt and greeting_template are required for new instructions' },
           { status: 400 }
         )
       }
 
-      // Check if instructions exist
-      const { data: existing } = await supabaseAdmin
-        .from('ai_instructions')
-        .select('id')
-        .eq('business_id', context.business.id)
-        .single()
-
+      // Prepare data for create/update
       let result
 
       if (existing) {
-        // Update existing instructions
+        // Update existing instructions (partial update)
+        const updateData: any = {}
+        if (system_prompt !== undefined) updateData.system_prompt = system_prompt
+        if (greeting_template !== undefined) updateData.greeting_template = greeting_template
+        if (tone !== undefined) updateData.tone = tone
+        if (language_handling !== undefined) updateData.language_handling = language_handling
+        if (response_length !== undefined) updateData.response_length = response_length
+        if (special_instructions !== undefined) updateData.special_instructions = special_instructions
+        updateData.updated_at = new Date().toISOString()
+
         result = await supabaseAdmin
           .from('ai_instructions')
-          .update({
-            system_prompt,
-            greeting_template,
-            tone,
-            language_handling,
-            response_length,
-            special_instructions,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('business_id', context.business.id)
           .select()
           .single()
       } else {
-        // Create new instructions
+        // Create new instructions (require all fields)
         result = await supabaseAdmin
           .from('ai_instructions')
           .insert({
             business_id: context.business.id,
-            system_prompt,
-            greeting_template,
-            tone,
-            language_handling,
-            response_length,
-            special_instructions,
+            system_prompt: system_prompt!,
+            greeting_template: greeting_template!,
+            tone: tone || 'friendly',
+            language_handling: language_handling || 'auto',
+            response_length: response_length || 'balanced',
+            special_instructions: special_instructions || '',
           })
           .select()
           .single()
