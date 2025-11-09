@@ -6,16 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
-import { z } from 'zod'
-
-// Validation schema
-const updateCannedResponseSchema = z.object({
-  title: z.string().min(1).max(100).optional(),
-  content: z.string().min(1).max(2000).optional(),
-  category: z.string().max(50).optional(),
-  shortcut: z.string().max(20).optional().nullable(),
-  is_active: z.boolean().optional(),
-})
+import { UpdateCannedResponseSchema } from '@/lib/validation/schemas'
 
 /**
  * PATCH /api/canned-responses/[id] - Update canned response
@@ -30,7 +21,7 @@ export async function PATCH(
       const body = await request.json()
 
       // Validate input
-      const validation = updateCannedResponseSchema.safeParse(body)
+      const validation = UpdateCannedResponseSchema.safeParse(body)
       if (!validation.success) {
         return NextResponse.json(
           { error: 'Invalid input', details: validation.error.issues },
@@ -53,13 +44,15 @@ export async function PATCH(
         )
       }
 
+      const validatedData = validation.data
+
       // If shortcut is provided, check for duplicates within the same business
-      if (validation.data.shortcut) {
+      if (validatedData.shortcut) {
         const { data: duplicate } = await supabaseAdmin
           .from('canned_responses')
           .select('id')
           .eq('business_id', context.business.id)
-          .eq('shortcut', validation.data.shortcut)
+          .eq('shortcut', validatedData.shortcut)
           .neq('id', id)
           .single()
 
@@ -75,7 +68,7 @@ export async function PATCH(
       const { data: response, error } = await supabaseAdmin
         .from('canned_responses')
         .update({
-          ...validation.data,
+          ...validatedData,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)

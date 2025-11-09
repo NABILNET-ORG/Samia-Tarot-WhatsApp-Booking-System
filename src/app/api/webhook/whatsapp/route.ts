@@ -7,6 +7,36 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getWhatsAppProvider } from '@/lib/whatsapp/factory'
 import { WorkflowEngine } from '@/lib/workflow/workflow-engine'
 import { supabaseHelpers } from '@/lib/supabase/client'
+import crypto from 'crypto'
+
+/**
+ * Verify Meta webhook signature
+ * Protects against webhook spoofing attacks
+ */
+function verifyMetaSignature(
+  payload: string,
+  signature: string | null,
+  appSecret: string
+): boolean {
+  if (!signature) return false
+
+  try {
+    const expectedSignature = crypto
+      .createHmac('sha256', appSecret)
+      .update(payload)
+      .digest('hex')
+
+    const signatureHash = signature.replace('sha256=', '')
+
+    return crypto.timingSafeEqual(
+      Buffer.from(signatureHash),
+      Buffer.from(expectedSignature)
+    )
+  } catch (error) {
+    console.error('❌ Signature verification error:', error)
+    return false
+  }
+}
 
 /**
  * GET - Webhook verification (Meta)
@@ -37,7 +67,28 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now()
 
   try {
-    const body = await request.json()
+    // Read raw body for signature verification
+    const rawBody = await request.text()
+
+    // Verify Meta webhook signature if Meta App Secret is configured
+    const metaAppSecret = process.env.META_APP_SECRET
+    if (metaAppSecret) {
+      const signature = request.headers.get('x-hub-signature-256')
+
+      if (!verifyMetaSignature(rawBody, signature, metaAppSecret)) {
+        console.warn('⚠️ Invalid Meta webhook signature - potential spoofing attempt')
+        return NextResponse.json(
+          { error: 'Invalid signature' },
+          { status: 403 }
+        )
+      }
+
+      console.log('✅ Meta webhook signature verified')
+    } else {
+      console.warn('⚠️ META_APP_SECRET not configured - signature verification skipped')
+    }
+
+    const body = JSON.parse(rawBody)
     const provider = getWhatsAppProvider()
 
     console.log(`📱 Webhook received from ${provider.getName()}`)

@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 import { sendPushNotification } from '@/lib/notifications/web-push'
+import { CreateNotificationSchema, MarkNotificationsReadSchema } from '@/lib/validation/schemas'
 
 /**
  * GET /api/notifications - List notifications for employee
@@ -50,14 +51,10 @@ export async function POST(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
       const body = await request.json()
-      const { employee_id, type, title, body: notifBody, related_conversation_id } = body
 
-      if (!employee_id || !type || !title || !notifBody) {
-        return NextResponse.json(
-          { error: 'Missing required fields' },
-          { status: 400 }
-        )
-      }
+      const validatedData = CreateNotificationSchema.parse(body)
+
+      const { employee_id, type, title, message, related_conversation_id } = validatedData
 
       // Create notification in database
       const { data: notification, error } = await supabaseAdmin
@@ -67,7 +64,7 @@ export async function POST(request: NextRequest) {
           employee_id,
           type,
           title,
-          body: notifBody,
+          body: message,
           related_conversation_id,
         })
         .select()
@@ -95,7 +92,7 @@ export async function POST(request: NextRequest) {
             },
             {
               title,
-              body: notifBody,
+              body: message,
               icon: '/icon-192.png',
               badge: '/badge-72.png',
               tag: notification.id,
@@ -130,14 +127,10 @@ export async function PATCH(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
       const body = await request.json()
-      const { notification_ids } = body
 
-      if (!notification_ids || !Array.isArray(notification_ids)) {
-        return NextResponse.json(
-          { error: 'notification_ids array is required' },
-          { status: 400 }
-        )
-      }
+      const validatedData = MarkNotificationsReadSchema.parse(body)
+
+      const { notification_ids } = validatedData
 
       const { error } = await supabaseAdmin
         .from('notifications')

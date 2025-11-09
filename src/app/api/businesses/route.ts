@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext, requirePermission } from '@/lib/multi-tenant/middleware'
 import { encryptBusinessKeys } from '@/lib/encryption/keys'
+import { BusinessSchema } from '@/lib/validation/schemas'
 
 /**
  * GET /api/businesses - List all businesses (super admin only)
@@ -46,14 +47,36 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+
+    const validation = BusinessSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validation.error.format()
+        },
+        { status: 400 }
+      )
+    }
+    const validatedData = validation.data
+
     const isSignup = body._signup === true // Flag for public signup
     const {
       name,
       slug,
+      email,
+      phone,
+      timezone,
+      subscription_plan,
+      whatsapp_phone_number_id,
+      twilio_phone_number,
+    } = validatedData
+
+    // Additional fields from body (not in schema)
+    const {
       industry,
       whatsapp_number,
       whatsapp_provider,
-      timezone,
       logo_url,
       // API keys (will be encrypted)
       meta_access_token,
@@ -73,14 +96,6 @@ export async function POST(request: NextRequest) {
       subscription_tier = 'trial',
     } = body
 
-    // Validate required fields
-    if (!name || !slug || !whatsapp_number) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, slug, whatsapp_number' },
-        { status: 400 }
-      )
-    }
-
     // Check slug uniqueness
     const { data: existing } = await supabaseAdmin
       .from('businesses')
@@ -99,19 +114,19 @@ export async function POST(request: NextRequest) {
     const { data: business, error: createError } = await supabaseAdmin
       .from('businesses')
       .insert({
-        name,
-        slug,
+        name: validatedData.name,
+        slug: validatedData.slug,
         industry,
-        whatsapp_number,
+        whatsapp_number: validatedData.phone || whatsapp_number,
         whatsapp_provider: whatsapp_provider || 'meta',
-        timezone: timezone || 'America/New_York',
+        timezone: validatedData.timezone,
         logo_url,
-        subscription_tier,
+        subscription_tier: validatedData.subscription_plan || subscription_tier,
         subscription_status: 'active',
         is_active: true,
         is_suspended: false,
         // Unencrypted metadata
-        meta_phone_number_id,
+        meta_phone_number_id: validatedData.whatsapp_phone_number_id || meta_phone_number_id,
         meta_verify_token,
         stripe_publishable_key,
         google_client_id,

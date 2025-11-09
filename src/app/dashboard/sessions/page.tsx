@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type Session = {
   id: string
@@ -63,11 +64,11 @@ export default function SessionsPage() {
         setSessions(sessions.filter(s => s.id !== sessionId))
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to revoke session')
+        toast.error(data.error || 'Failed to revoke session')
       }
     } catch (error) {
       console.error('Failed to revoke session:', error)
-      alert('Failed to revoke session')
+      toast.error('Failed to revoke session')
     } finally {
       setRevoking(null)
     }
@@ -90,11 +91,11 @@ export default function SessionsPage() {
         await loadSessions()
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to revoke sessions')
+        toast.error(data.error || 'Failed to revoke sessions')
       }
     } catch (error) {
       console.error('Failed to revoke sessions:', error)
-      alert('Failed to revoke sessions')
+      toast.error('Failed to revoke sessions')
     } finally {
       setRevoking(null)
     }

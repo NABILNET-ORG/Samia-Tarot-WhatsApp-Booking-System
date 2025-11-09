@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type MediaFile = {
   id: string
@@ -59,7 +60,7 @@ export default function MediaGalleryPage() {
 
       // Validate file size (max 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        alert('❌ File size exceeds 10MB limit')
+        toast.error('File size exceeds 10MB limit')
         setUploading(false)
         return
       }
@@ -80,15 +81,15 @@ export default function MediaGalleryPage() {
       })
 
       if (response.ok) {
-        alert('✅ File uploaded successfully!')
+        toast.success('File uploaded successfully')
         loadFiles()
       } else {
         const data = await response.json()
-        alert(`❌ Upload failed: ${data.error || 'Unknown error'}`)
+        toast.error(`Upload failed: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Upload error:', error)
-      alert('❌ Failed to upload file. Please try again.')
+      toast.error('Failed to upload file. Please try again.')
     } finally {
       setUploading(false)
     }
@@ -103,17 +104,17 @@ export default function MediaGalleryPage() {
       })
 
       if (response.ok) {
-        alert('✅ File deleted successfully!')
+        toast.success('File deleted successfully')
         setShowDeleteModal(false)
         setSelectedFile(null)
         loadFiles()
       } else {
         const data = await response.json()
-        alert(`❌ Delete failed: ${data.error || 'Unknown error'}`)
+        toast.error(`Delete failed: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Delete error:', error)
-      alert('❌ Failed to delete file. Please try again.')
+      toast.error('Failed to delete file. Please try again.')
     }
   }
 

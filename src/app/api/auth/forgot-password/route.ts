@@ -8,6 +8,7 @@ import { supabaseAdmin } from '@/lib/supabase/client'
 import { randomBytes } from 'crypto'
 import { rateLimit } from '@/lib/rate-limit'
 import { sendPasswordResetEmail } from '@/lib/email/resend'
+import { ForgotPasswordSchema } from '@/lib/validation/schemas'
 
 /**
  * POST /api/auth/forgot-password
@@ -16,7 +17,20 @@ import { sendPasswordResetEmail } from '@/lib/email/resend'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email } = body
+
+    // Validate input with Zod
+    const validation = ForgotPasswordSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validation.error.format()
+        },
+        { status: 400 }
+      )
+    }
+
+    const { email } = validation.data
 
     // Get IP for rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
@@ -34,14 +48,6 @@ export async function POST(request: NextRequest) {
           message: 'Please wait before requesting another password reset.',
         },
         { status: 429 }
-      )
-    }
-
-    // Validate email
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { error: 'Valid email address is required' },
-        { status: 400 }
       )
     }
 

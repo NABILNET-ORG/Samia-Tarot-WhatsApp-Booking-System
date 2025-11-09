@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type DashboardStats = {
   totalBookings: number
@@ -78,15 +79,15 @@ export default function AdminDashboardPage() {
       })
 
       if (response.ok) {
-        alert(`Successfully switched to ${provider.toUpperCase()}`)
+        toast.success(`Successfully switched to ${provider.toUpperCase()}`)
         await loadDashboardData()
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to switch provider')
+        toast.error(data.error || 'Failed to switch provider')
       }
     } catch (error) {
       console.error('Failed to switch provider:', error)
-      alert('Failed to switch provider')
+      toast.error('Failed to switch provider')
     } finally {
       setSwitchingProvider(false)
     }

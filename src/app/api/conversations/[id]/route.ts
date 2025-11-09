@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { UpdateConversationSchema } from '@/lib/validation/schemas'
 
 type RouteParams = {
   params: { id: string }
@@ -49,6 +50,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       const { id } = params
       const body = await request.json()
 
+      const validation = UpdateConversationSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.format()
+          },
+          { status: 400 }
+        )
+      }
+      const validatedData = validation.data
+
       // Allowed fields to update
       const allowedFields = [
         'current_state',
@@ -64,8 +77,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       // Filter only allowed fields
       const updates: any = {}
       for (const field of allowedFields) {
-        if (body[field] !== undefined) {
-          updates[field] = body[field]
+        if (validatedData[field as keyof typeof validatedData] !== undefined) {
+          updates[field] = validatedData[field as keyof typeof validatedData]
         }
       }
 

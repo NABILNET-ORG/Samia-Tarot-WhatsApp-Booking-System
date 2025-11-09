@@ -9,6 +9,7 @@ import { requirePermission } from '@/lib/multi-tenant/middleware'
 import { hashPassword } from '@/lib/auth/session'
 import { validatePassword } from '@/lib/validation/password'
 import { sendEmployeeInviteEmail } from '@/lib/email/resend'
+import { EmployeeSchema } from '@/lib/validation/schemas'
 
 /**
  * GET /api/employees - List employees in business
@@ -63,30 +64,26 @@ export async function POST(request: NextRequest) {
   return requirePermission(request, 'employees', 'create', async (context) => {
     try {
       const body = await request.json()
+
+      const validation = EmployeeSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.format()
+          },
+          { status: 400 }
+        )
+      }
+      const validatedData = validation.data
+
       const {
         email,
         full_name,
         role_id,
         temporary_password,
         custom_permissions_json,
-      } = body
-
-      // Validate required fields
-      if (!email || !full_name || !role_id || !temporary_password) {
-        return NextResponse.json(
-          { error: 'Missing required fields: email, full_name, role_id, temporary_password' },
-          { status: 400 }
-        )
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(email)) {
-        return NextResponse.json(
-          { error: 'Invalid email format' },
-          { status: 400 }
-        )
-      }
+      } = validatedData
 
       // Validate password complexity
       const passwordValidation = validatePassword(temporary_password)

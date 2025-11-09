@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { UpdateMediaSchema } from '@/lib/validation/schemas'
 
 /**
  * DELETE /api/media/[id] - Delete media file
@@ -71,6 +72,75 @@ export async function DELETE(
       console.error('Media deletion error:', error)
       return NextResponse.json(
         { error: 'Failed to delete media file', message: error.message },
+        { status: 500 }
+      )
+    }
+  })
+}
+
+/**
+ * PATCH /api/media/[id] - Update media file metadata
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  return requireBusinessContext(request, async (context) => {
+    try {
+      const body = await request.json()
+
+      // Validate input with Zod
+      const validation = UpdateMediaSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.format()
+          },
+          { status: 400 }
+        )
+      }
+
+      const validatedData = validation.data
+      const { id } = params
+
+      // Verify media file belongs to this business
+      const { data: mediaFile, error: fetchError } = await supabaseAdmin
+        .from('media_files')
+        .select('id, business_id')
+        .eq('id', id)
+        .eq('business_id', context.business.id)
+        .is('deleted_at', null)
+        .single()
+
+      if (fetchError || !mediaFile) {
+        return NextResponse.json(
+          { error: 'Media file not found' },
+          { status: 404 }
+        )
+      }
+
+      // Update media file
+      const { data: updatedMedia, error: updateError } = await supabaseAdmin
+        .from('media_files')
+        .update({
+          ...validatedData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (updateError) throw updateError
+
+      return NextResponse.json({
+        file: updatedMedia,
+        message: 'Media file updated successfully'
+      })
+    } catch (error: any) {
+      console.error('Media update error:', error)
+      return NextResponse.json(
+        { error: 'Failed to update media file', message: error.message },
         { status: 500 }
       )
     }

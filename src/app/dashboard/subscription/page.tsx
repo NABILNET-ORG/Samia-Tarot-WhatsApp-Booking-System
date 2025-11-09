@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type Subscription = {
   id: string
@@ -85,15 +86,15 @@ export default function SubscriptionPage() {
       })
 
       if (response.ok) {
-        alert('Subscription cancelled successfully')
+        toast.success('Subscription cancelled successfully')
         await loadSubscription()
       } else {
         const data = await response.json()
-        alert(data.error || 'Failed to cancel subscription')
+        toast.error(data.error || 'Failed to cancel subscription')
       }
     } catch (error) {
       console.error('Failed to cancel subscription:', error)
-      alert('Failed to cancel subscription')
+      toast.error('Failed to cancel subscription')
     } finally {
       setCancelling(false)
     }
@@ -115,11 +116,11 @@ export default function SubscriptionPage() {
       if (data.checkout_url) {
         window.location.href = data.checkout_url
       } else {
-        alert('Failed to create checkout session')
+        toast.error('Failed to create checkout session')
       }
     } catch (error) {
       console.error('Failed to upgrade:', error)
-      alert('Failed to start upgrade process')
+      toast.error('Failed to start upgrade process')
     }
   }
 

@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 export default function CustomersPage() {
   const { business } = useBusinessContext()
@@ -51,7 +52,7 @@ export default function CustomersPage() {
     // Validate phone number
     const phoneRegex = /^[+]?[\d\s-()]{7,}$/
     if (!phoneRegex.test(formData.phone)) {
-      alert('❌ Invalid phone number format')
+      toast.error('Invalid phone number format')
       return
     }
 
@@ -62,16 +63,16 @@ export default function CustomersPage() {
         body: JSON.stringify(formData)
       })
       if (response.ok) {
-        alert('✅ Customer created!')
+        toast.success('Customer created successfully')
         setShowCreateModal(false)
         resetForm()
         loadCustomers()
       } else {
         const data = await response.json()
-        alert(`❌ ${data.error}`)
+        toast.error(data.error)
       }
     } catch (error) {
-      alert('❌ Failed to create customer')
+      toast.error('Failed to create customer')
     }
   }
 
@@ -81,7 +82,7 @@ export default function CustomersPage() {
     // Validate phone number
     const phoneRegex = /^[+]?[\d\s-()]{7,}$/
     if (!phoneRegex.test(formData.phone)) {
-      alert('❌ Invalid phone number format')
+      toast.error('Invalid phone number format')
       return
     }
 
@@ -92,16 +93,16 @@ export default function CustomersPage() {
         body: JSON.stringify(formData)
       })
       if (response.ok) {
-        alert('✅ Customer updated!')
+        toast.success('Customer updated successfully')
         setShowEditModal(false)
         setSelectedCustomer(null)
         loadCustomers()
       } else {
         const data = await response.json()
-        alert(`❌ ${data.error}`)
+        toast.error(data.error)
       }
     } catch (error) {
-      alert('❌ Failed to update')
+      toast.error('Failed to update customer')
     }
   }
 
@@ -114,19 +115,16 @@ export default function CustomersPage() {
       if (response.ok) {
         // Show GDPR deletion summary
         const summary = data.deletion_summary
-        alert(`✅ Customer deleted successfully (GDPR compliant)\n\n` +
-          `Conversations deleted: ${summary?.conversations_deleted || 0}\n` +
-          `Bookings deleted: ${summary?.bookings_deleted || 0}\n\n` +
-          `Retention Policy: ${summary?.retention_policy || '30 days'}`)
+        toast.success(`Customer deleted successfully (GDPR compliant)\n\nConversations deleted: ${summary?.conversations_deleted || 0}\nBookings deleted: ${summary?.bookings_deleted || 0}\n\nRetention Policy: ${summary?.retention_policy || '30 days'}`)
 
         setShowDeleteModal(false)
         setSelectedCustomer(null)
         loadCustomers()
       } else {
-        alert(`❌ ${data.error || 'Failed to delete customer'}`)
+        toast.error(data.error || 'Failed to delete customer')
       }
     } catch (error) {
-      alert('❌ Failed to delete')
+      toast.error('Failed to delete customer')
     }
   }
 

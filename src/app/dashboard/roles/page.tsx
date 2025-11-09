@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type Permission = {
   view?: boolean
@@ -185,16 +186,16 @@ export default function RolesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Role created successfully!')
+        toast.success('Role created successfully')
         setShowCreateModal(false)
         loadRoles()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to create role: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to create role: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to create role:', error)
-      alert('❌ Failed to create role. Please try again.')
+      toast.error('Failed to create role. Please try again.')
     }
   }
 
@@ -209,17 +210,17 @@ export default function RolesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Role updated successfully!')
+        toast.success('Role updated successfully')
         setShowEditModal(false)
         setSelectedRole(null)
         loadRoles()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to update role: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to update role: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to update role:', error)
-      alert('❌ Failed to update role. Please try again.')
+      toast.error('Failed to update role. Please try again.')
     }
   }
 
@@ -232,17 +233,17 @@ export default function RolesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Role deleted successfully!')
+        toast.success('Role deleted successfully')
         setShowDeleteModal(false)
         setSelectedRole(null)
         loadRoles()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to delete role: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to delete role: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to delete role:', error)
-      alert('❌ Failed to delete role. Please try again.')
+      toast.error('Failed to delete role. Please try again.')
     }
   }
 

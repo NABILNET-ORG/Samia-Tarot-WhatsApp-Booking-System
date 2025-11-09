@@ -5,6 +5,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<any[]>([])
@@ -23,6 +24,7 @@ export default function BookingsPage() {
       if (data.bookings) setBookings(data.bookings)
     } catch (error) {
       console.error(error)
+      toast.error('Failed to load bookings')
     } finally {
       setLoading(false)
     }

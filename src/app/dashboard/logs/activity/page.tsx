@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
 interface ActivityLog {
   id: string
@@ -46,6 +47,7 @@ export default function ActivityLogsPage() {
       }
     } catch (error) {
       console.error('Error loading activity logs:', error)
+      toast.error('Failed to load activity logs')
     } finally {
       setLoading(false)
     }

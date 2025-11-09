@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
 import { hashPassword } from '@/lib/auth/session'
+import { UpdateEmployeeSchema } from '@/lib/validation/schemas'
 
 type RouteParams = {
   params: { id: string }
@@ -60,24 +61,41 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       const { id } = params
       const body = await request.json()
 
+      const validation = UpdateEmployeeSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json(
+          {
+            error: 'Validation failed',
+            details: validation.error.format()
+          },
+          { status: 400 }
+        )
+      }
+      const validatedData = validation.data
+
       const updates: any = {}
 
-      // Handle allowed fields
+      // Handle allowed fields from validated data
       const allowedFields = [
         'full_name', 'role_id', 'custom_permissions_json',
-        'is_active', 'avatar_url'
+        'is_active'
       ]
 
       for (const field of allowedFields) {
-        if (body[field] !== undefined) {
-          updates[field] = body[field]
+        if (validatedData[field as keyof typeof validatedData] !== undefined) {
+          updates[field] = validatedData[field as keyof typeof validatedData]
         }
       }
 
-      // Handle password change
+      // Handle password change (not in schema, so check original body)
       if (body.new_password) {
         updates.password_hash = await hashPassword(body.new_password)
         updates.must_change_password = false
+      }
+
+      // Handle avatar_url (not in schema, so check original body)
+      if (body.avatar_url !== undefined) {
+        updates.avatar_url = body.avatar_url
       }
 
       if (Object.keys(updates).length === 0) {

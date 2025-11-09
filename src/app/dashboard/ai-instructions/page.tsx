@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type AIInstruction = {
   id?: string
@@ -85,10 +86,10 @@ export default function AIInstructionsPage() {
         setNewUrl('')
         setSettings({...settings, knowledge_base_urls: [...knowledgeUrls, newUrl]})
       } catch {
-        alert('Invalid URL format')
+        toast.error('Invalid URL format')
       }
     } else if (knowledgeUrls.length >= 20) {
-      alert('Maximum 20 websites allowed')
+      toast.error('Maximum 20 websites allowed')
     }
   }
 
@@ -107,12 +108,12 @@ export default function AIInstructionsPage() {
         body: JSON.stringify({ urls: knowledgeUrls })
       })
       if (response.ok) {
-        alert('Knowledge base refreshed successfully!')
+        toast.success('Knowledge base refreshed successfully')
       } else {
-        alert('Failed to refresh knowledge base')
+        toast.error('Failed to refresh knowledge base')
       }
     } catch (error) {
-      alert('Error refreshing knowledge base')
+      toast.error('Error refreshing knowledge base')
     } finally {
       setSaving(false)
     }
@@ -137,16 +138,16 @@ export default function AIInstructionsPage() {
       })
 
       if (instructionsResponse.ok && settingsResponse.ok) {
-        alert('✅ AI instructions saved successfully!')
+        toast.success('AI instructions saved successfully')
         loadInstructions()
         loadSettings()
       } else {
         const data = await instructionsResponse.json()
-        alert(`❌ Failed to save: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to save: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to save AI instructions:', error)
-      alert('❌ Failed to save. Please try again.')
+      toast.error('Failed to save. Please try again.')
     } finally {
       setSaving(false)
     }

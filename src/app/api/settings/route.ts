@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
 import { encryptApiKey } from '@/lib/encryption/keys'
+import { UpdateSettingsSchema } from '@/lib/validation/schemas'
 
 export async function GET(request: NextRequest) {
   return requirePermission(request, 'businesses', 'read', async (context) => {
@@ -20,15 +21,28 @@ export async function PATCH(request: NextRequest) {
   return requirePermission(request, 'businesses', 'update', async (context) => {
     try {
       const body = await request.json()
+
+      // Validate input
+      const validation = UpdateSettingsSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: validation.error.issues },
+          { status: 400 }
+        )
+      }
+
+      const validatedData = validation.data
       const updates: any = {}
 
       // Handle non-sensitive fields
       const allowedFields = ['name', 'timezone', 'logo_url', 'primary_color', 'ai_model', 'ai_temperature', 'ai_max_tokens']
       for (const field of allowedFields) {
-        if (body[field] !== undefined) updates[field] = body[field]
+        if (validatedData[field as keyof typeof validatedData] !== undefined) {
+          updates[field] = validatedData[field as keyof typeof validatedData]
+        }
       }
 
-      // Handle encrypted fields
+      // Handle encrypted fields (note: openai_api_key is not in UpdateSettingsSchema, keeping original logic)
       if (body.openai_api_key) {
         updates.openai_api_key_encrypted = encryptApiKey(body.openai_api_key, context.business.id)
       }

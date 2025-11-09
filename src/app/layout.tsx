@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Cairo } from 'next/font/google'
 import './globals.css'
+import { ToastProvider } from '@/components/ToastProvider'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const cairo = Cairo({ subsets: ['arabic'], variable: '--font-cairo' })
@@ -55,6 +56,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${cairo.variable} font-sans antialiased h-full bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100`}>
         {children}
+        <ToastProvider />
       </body>
     </html>
   )

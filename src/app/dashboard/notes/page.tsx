@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type Note = {
   id: string
@@ -83,7 +84,7 @@ export default function NotesPage() {
     try {
       // At least one ID must be provided
       if (!formData.conversation_id && !formData.customer_id) {
-        alert('⚠️ Please provide either a Conversation ID or Customer ID')
+        toast.error('Please provide either a Conversation ID or Customer ID')
         return
       }
 
@@ -101,7 +102,7 @@ export default function NotesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Note created successfully!')
+        toast.success('Note created successfully')
         setShowCreateModal(false)
         setFormData({
           note: '',
@@ -114,11 +115,11 @@ export default function NotesPage() {
         loadNotes()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to create note: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to create note: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to create note:', error)
-      alert('❌ Failed to create note. Please try again.')
+      toast.error('Failed to create note. Please try again.')
     }
   }
 
@@ -138,17 +139,17 @@ export default function NotesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Note updated successfully!')
+        toast.success('Note updated successfully')
         setShowEditModal(false)
         setSelectedNote(null)
         loadNotes()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to update note: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to update note: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to update note:', error)
-      alert('❌ Failed to update note. Please try again.')
+      toast.error('Failed to update note. Please try again.')
     }
   }
 
@@ -161,17 +162,17 @@ export default function NotesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Note deleted successfully!')
+        toast.success('Note deleted successfully')
         setShowDeleteModal(false)
         setSelectedNote(null)
         loadNotes()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to delete note: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to delete note: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to delete note:', error)
-      alert('❌ Failed to delete note. Please try again.')
+      toast.error('Failed to delete note. Please try again.')
     }
   }
 
@@ -186,7 +187,7 @@ export default function NotesPage() {
       if (response.ok) {
         loadNotes()
       } else {
-        alert('❌ Failed to toggle pin')
+        toast.error('Failed to toggle pin')
       }
     } catch (error) {
       console.error('Failed to toggle pin:', error)

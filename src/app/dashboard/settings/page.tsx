@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type Tab = 'overview' | 'general' | 'secrets' | 'integrations'
 
@@ -85,10 +86,10 @@ export default function SettingsPage() {
         setNewUrl('')
         setSettings({...settings, knowledge_base_urls: [...knowledgeUrls, newUrl]})
       } catch {
-        alert('Invalid URL format')
+        toast.error('Invalid URL format')
       }
     } else if (knowledgeUrls.length >= 20) {
-      alert('Maximum 20 websites allowed')
+      toast.error('Maximum 20 websites allowed')
     }
   }
 
@@ -107,12 +108,12 @@ export default function SettingsPage() {
         body: JSON.stringify({ urls: knowledgeUrls })
       })
       if (response.ok) {
-        alert('Knowledge base refreshed successfully!')
+        toast.success('Knowledge base refreshed successfully')
       } else {
-        alert('Failed to refresh knowledge base')
+        toast.error('Failed to refresh knowledge base')
       }
     } catch (error) {
-      alert('Error refreshing knowledge base')
+      toast.error('Error refreshing knowledge base')
     } finally {
       setSaving(false)
     }
@@ -143,13 +144,13 @@ export default function SettingsPage() {
         body: JSON.stringify(settings),
       })
       if (response.ok) {
-        alert('Settings saved successfully!')
+        toast.success('Settings saved successfully')
         refetch()
       } else {
-        alert('Failed to save settings')
+        toast.error('Failed to save settings')
       }
     } catch (error) {
-      alert('Error saving settings')
+      toast.error('Error saving settings')
     } finally {
       setSaving(false)
     }
@@ -165,14 +166,14 @@ export default function SettingsPage() {
         body: JSON.stringify(secrets),
       })
       if (response.ok) {
-        alert('Secrets saved successfully!')
+        toast.success('Secrets saved successfully')
         refetch()
         checkSystemStatus()
       } else {
-        alert('Failed to save secrets')
+        toast.error('Failed to save secrets')
       }
     } catch (error) {
-      alert('Error saving secrets')
+      toast.error('Error saving secrets')
     } finally {
       setSaving(false)
     }
@@ -187,14 +188,14 @@ export default function SettingsPage() {
       })
       if (response.ok) {
         setCurrentProvider(provider)
-        alert(`✅ Switched to ${provider === 'meta' ? 'Meta WhatsApp' : 'Twilio'}!`)
+        toast.success(`Switched to ${provider === 'meta' ? 'Meta WhatsApp' : 'Twilio'}`)
         refetch()
       } else {
-        alert('Failed to switch provider')
+        toast.error('Failed to switch provider')
       }
     } catch (error) {
       console.error(error)
-      alert('Error switching provider')
+      toast.error('Error switching provider')
     }
   }
 

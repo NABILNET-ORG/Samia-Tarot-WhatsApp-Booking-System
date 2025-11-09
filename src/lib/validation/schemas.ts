@@ -7,6 +7,31 @@ import { z } from 'zod'
 
 // Phone number regex (international format)
 const phoneRegex = /^\+?[1-9]\d{1,14}$/
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// ==================== AUTHENTICATION SCHEMAS ====================
+
+export const LoginSchema = z.object({
+  email: z.string().email('Invalid email format').max(255),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+})
+
+export const ForgotPasswordSchema = z.object({
+  email: z.string().email('Invalid email format').max(255),
+})
+
+export const ResetPasswordSchema = z.object({
+  token: z.string().min(32, 'Invalid token'),
+  new_password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+})
+
+export const SendVerificationSchema = z.object({
+  email: z.string().email().max(255).optional(),
+})
 
 // ==================== CUSTOMER SCHEMAS ====================
 
@@ -115,6 +140,11 @@ export const MessageSchema = z.object({
   media_url: z.string().url().optional(),
 })
 
+export const UpdateMessageSchema = z.object({
+  content: z.string().min(1).max(10000).trim().optional(),
+  is_read: z.boolean().optional(),
+})
+
 // ==================== CONVERSATION SCHEMAS ====================
 
 export const ConversationSchema = z.object({
@@ -122,6 +152,103 @@ export const ConversationSchema = z.object({
   phone: z.string().regex(phoneRegex),
   mode: z.enum(['ai', 'human', 'hybrid']).default('ai'),
   assigned_employee_id: z.string().uuid().optional(),
+})
+
+export const UpdateConversationSchema = z.object({
+  mode: z.enum(['ai', 'human', 'hybrid']).optional(),
+  current_state: z.string().optional(),
+  is_active: z.boolean().optional(),
+  assigned_to: z.string().uuid().nullable().optional(),
+})
+
+export const TakeoverConversationSchema = z.object({
+  conversation_id: z.string().uuid(),
+})
+
+// ==================== NOTIFICATION SCHEMAS ====================
+
+export const CreateNotificationSchema = z.object({
+  employee_id: z.string().uuid(),
+  type: z.string().min(1).max(50),
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(1000),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
+  action_url: z.string().url().optional(),
+  action_label: z.string().max(50).optional(),
+  related_conversation_id: z.string().uuid().optional(),
+  related_booking_id: z.string().uuid().optional(),
+  related_customer_id: z.string().uuid().optional(),
+})
+
+export const MarkNotificationsReadSchema = z.object({
+  notification_ids: z.array(z.string().uuid()).min(1),
+})
+
+export const PushSubscriptionSchema = z.object({
+  endpoint: z.string().url(),
+  p256dh_key: z.string().min(1),
+  auth_key: z.string().min(1),
+  device_type: z.string().optional(),
+  browser: z.string().optional(),
+  os: z.string().optional(),
+})
+
+// ==================== SETTINGS SCHEMAS ====================
+
+export const UpdateSettingsSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  support_email: z.string().email().max(255).optional(),
+  support_phone: z.string().regex(phoneRegex).optional(),
+  timezone: z.string().max(50).optional(),
+  business_hours_start: z.string().optional(),
+  business_hours_end: z.string().optional(),
+  currency: z.string().max(3).optional(),
+  language_primary: z.string().max(10).optional(),
+  ai_model: z.string().max(50).optional(),
+  ai_temperature: z.number().min(0).max(2).optional(),
+  ai_max_tokens: z.number().positive().optional(),
+  ai_conversation_memory: z.number().positive().optional(),
+})
+
+export const UpdateAIInstructionsSchema = z.object({
+  system_prompt: z.string().max(5000).optional(),
+  greeting_template: z.string().max(1000).optional(),
+  tone: z.enum(['professional', 'friendly', 'mystical', 'casual']).optional(),
+  language_handling: z.string().max(500).optional(),
+  response_length: z.enum(['concise', 'balanced', 'detailed']).optional(),
+  special_instructions: z.string().max(2000).optional(),
+})
+
+// ==================== NOTE SCHEMAS ====================
+
+export const CreateNoteSchema = z.object({
+  conversation_id: z.string().uuid().optional(),
+  customer_id: z.string().uuid().optional(),
+  note: z.string().min(1).max(5000).trim(),
+  note_type: z.enum(['general', 'warning', 'follow_up', 'reminder', 'vip']).default('general'),
+  is_pinned: z.boolean().default(false),
+  is_important: z.boolean().default(false),
+  mentioned_employee_ids: z.array(z.string().uuid()).optional(),
+}).refine(
+  (data) => data.conversation_id || data.customer_id,
+  { message: 'Either conversation_id or customer_id must be provided' }
+)
+
+export const UpdateNoteSchema = CreateNoteSchema.partial()
+
+// ==================== MEDIA SCHEMAS ====================
+
+export const UpdateMediaSchema = z.object({
+  file_name: z.string().min(1).max(255).optional(),
+  used_for: z.string().max(100).optional(),
+  used_by_id: z.string().uuid().optional(),
+})
+
+// ==================== BULK OPERATIONS SCHEMAS ====================
+
+export const BulkCustomerSchema = z.object({
+  action: z.enum(['delete', 'export']),
+  customer_ids: z.array(z.string().uuid()).min(1, 'At least one customer must be selected'),
 })
 
 // ==================== SANITIZATION HELPERS ====================

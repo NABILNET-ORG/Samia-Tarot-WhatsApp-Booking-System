@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { MessageSchema } from '@/lib/validation/schemas'
 
 /**
  * GET /api/messages?conversation_id=xxx - Get conversation history
@@ -64,21 +65,29 @@ export async function POST(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
       const body = await request.json()
-      const {
-        conversation_id,
-        content,
-        message_type = 'text',
-        media_url,
-        media_thumbnail_url,
-        media_duration_seconds,
-      } = body
 
-      if (!conversation_id || !content) {
+      // Validate input with Zod
+      const validationResult = MessageSchema.safeParse(body)
+      if (!validationResult.success) {
         return NextResponse.json(
-          { error: 'conversation_id and content are required' },
+          {
+            error: 'Validation failed',
+            details: validationResult.error.issues.map(issue => ({
+              path: issue.path.join('.'),
+              message: issue.message
+            }))
+          },
           { status: 400 }
         )
       }
+
+      const validatedData = validationResult.data
+      const {
+        conversation_id,
+        content,
+        message_type,
+        media_url,
+      } = validatedData
 
       // Verify conversation belongs to this business
       const { data: conversation, error: convError } = await supabaseAdmin
@@ -96,16 +105,14 @@ export async function POST(request: NextRequest) {
       const { data: message, error } = await supabaseAdmin
         .from('messages')
         .insert({
-          conversation_id,
+          conversation_id: validatedData.conversation_id,
           business_id: context.business.id,
           sender_type: 'agent',
           sender_id: context.employee.id,
           sender_name: context.employee.full_name,
-          content,
-          message_type,
-          media_url,
-          media_thumbnail_url,
-          media_duration_seconds,
+          content: validatedData.content,
+          message_type: validatedData.message_type,
+          media_url: validatedData.media_url,
           delivered_at: new Date().toISOString(),
         })
         .select()
@@ -120,10 +127,10 @@ export async function POST(request: NextRequest) {
         await sendWhatsAppMessage(
           context.business.id,
           conversation.phone,
-          content,
+          validatedData.content,
           {
-            mediaUrl: media_url,
-            mediaType: message_type === 'image' ? 'image' : message_type === 'voice' ? 'audio' : undefined,
+            mediaUrl: validatedData.media_url,
+            mediaType: validatedData.message_type === 'image' ? 'image' : validatedData.message_type === 'voice' ? 'audio' : undefined,
           }
         )
 

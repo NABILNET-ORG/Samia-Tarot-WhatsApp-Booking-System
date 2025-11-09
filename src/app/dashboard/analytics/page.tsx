@@ -5,6 +5,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import {
   LineChart,
   Line,
@@ -46,6 +47,7 @@ export default function AnalyticsPage() {
       if (data.analytics) setAnalytics(data.analytics)
     } catch (error) {
       console.error(error)
+      toast.error('Failed to load analytics')
     } finally {
       setLoading(false)
     }
@@ -93,6 +95,7 @@ export default function AnalyticsPage() {
       }
     } catch (error) {
       console.error('Error loading trends:', error)
+      toast.error('Failed to load trends')
     }
   }
 

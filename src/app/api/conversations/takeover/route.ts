@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
+import { TakeoverConversationSchema } from '@/lib/validation/schemas'
 
 /**
  * POST /api/conversations/takeover - Take over conversation from AI
@@ -14,14 +15,18 @@ export async function POST(request: NextRequest) {
   return requirePermission(request, 'conversations', 'takeover', async (context) => {
     try {
       const body = await request.json()
-      const { conversation_id } = body
 
-      if (!conversation_id) {
+      const validation = TakeoverConversationSchema.safeParse(body)
+      if (!validation.success) {
         return NextResponse.json(
-          { error: 'conversation_id is required' },
+          {
+            error: 'Validation failed',
+            details: validation.error.format()
+          },
           { status: 400 }
         )
       }
+      const validatedData = validation.data
 
       // Update conversation mode and assign to employee
       const { data: conversation, error } = await supabaseAdmin
@@ -33,7 +38,7 @@ export async function POST(request: NextRequest) {
           assigned_at: new Date().toISOString(),
           last_message_at: new Date().toISOString(),
         })
-        .eq('id', conversation_id)
+        .eq('id', validatedData.conversation_id)
         .eq('business_id', context.business.id)
         .select()
         .single()
@@ -46,7 +51,7 @@ export async function POST(request: NextRequest) {
 
       // Create system message
       await supabaseAdmin.from('messages').insert({
-        conversation_id,
+        conversation_id: validatedData.conversation_id,
         business_id: context.business.id,
         sender_type: 'system',
         content: `${context.employee.full_name} joined the conversation`,

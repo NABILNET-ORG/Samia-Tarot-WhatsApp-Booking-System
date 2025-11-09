@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type Template = {
   id: string
@@ -95,7 +96,7 @@ export default function TemplatesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Created successfully!')
+        toast.success('Created successfully')
         setShowCreateModal(false)
         setFormData({
           name: '',
@@ -109,11 +110,11 @@ export default function TemplatesPage() {
         loadData()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to create: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to create: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to create:', error)
-      alert('❌ Failed to create. Please try again.')
+      toast.error('Failed to create. Please try again.')
     }
   }
 
@@ -172,7 +173,7 @@ export default function TemplatesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Updated successfully!')
+        toast.success('Updated successfully')
         setShowEditModal(false)
         setSelectedItem(null)
         setFormData({
@@ -187,11 +188,11 @@ export default function TemplatesPage() {
         loadData()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to update: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to update: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to update:', error)
-      alert('❌ Failed to update. Please try again.')
+      toast.error('Failed to update. Please try again.')
     }
   }
 
@@ -213,17 +214,17 @@ export default function TemplatesPage() {
       })
 
       if (response.ok) {
-        alert('✅ Deleted successfully!')
+        toast.success('Deleted successfully')
         setShowDeleteModal(false)
         setSelectedItem(null)
         loadData()
       } else {
         const data = await response.json()
-        alert(`❌ Failed to delete: ${data.error || 'Unknown error'}`)
+        toast.error(`Failed to delete: ${data.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Failed to delete:', error)
-      alert('❌ Failed to delete. Please try again.')
+      toast.error('Failed to delete. Please try again.')
     }
   }
 

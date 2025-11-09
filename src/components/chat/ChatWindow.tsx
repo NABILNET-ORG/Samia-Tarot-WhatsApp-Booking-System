@@ -10,6 +10,7 @@ import { MessageBubble } from './MessageBubble'
 import { MessageComposer } from './MessageComposer'
 import { useRealtimeMessages } from '@/hooks/useRealtimeMessages'
 import { useBusinessContext } from '@/lib/multi-tenant/context'
+import toast from 'react-hot-toast'
 
 type ChatWindowProps = {
   conversationId: string
@@ -81,6 +82,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
       }
     } catch (error) {
       console.error('Failed to load messages:', error)
+      toast.error('Failed to load messages')
     } finally {
       setLoading(false)
     }
@@ -96,6 +98,7 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
       }
     } catch (error) {
       console.error('Failed to load conversation:', error)
+      toast.error('Failed to load conversation')
     }
   }
 
@@ -173,10 +176,14 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                     body: JSON.stringify({ conversation_id: conversationId })
                   })
                   if (response.ok) {
+                    toast.success('Conversation taken over - You can now respond')
                     handleTakeOver()
+                  } else {
+                    toast.error('Failed to take over conversation')
                   }
                 } catch (error) {
                   console.error('Failed to take over:', error)
+                  toast.error('Failed to take over conversation')
                 }
               }}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
@@ -197,10 +204,14 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                     body: JSON.stringify({ conversation_id: conversationId })
                   })
                   if (response.ok) {
+                    toast.success('Conversation returned to AI')
                     handleTakeOver() // Reload conversation
+                  } else {
+                    toast.error('Failed to give back to AI')
                   }
                 } catch (error) {
                   console.error('Failed to give back to AI:', error)
+                  toast.error('Failed to give back to AI')
                 }
               }}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
@@ -270,8 +281,10 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                         a.click()
                         document.body.removeChild(a)
                         URL.revokeObjectURL(url)
+                        toast.success('Chat exported successfully')
                       } catch (error) {
-                        alert('Failed to export chat')
+                        console.error('Export error:', error)
+                        toast.error('Failed to export chat')
                       }
                       setShowMenu(false)
                     }}
@@ -289,13 +302,14 @@ export function ChatWindow({ conversationId, onToggleCustomerInfo, onBack, isMob
                           })
                           if (response.ok) {
                             setMessages([])
-                            alert('Conversation cleared successfully!')
+                            toast.success('Conversation cleared successfully')
                             loadConversation()
                           } else {
-                            alert('Failed to clear conversation')
+                            toast.error('Failed to clear conversation')
                           }
                         } catch (error) {
-                          alert('Error clearing conversation')
+                          console.error('Error clearing conversation:', error)
+                          toast.error('Failed to clear conversation')
                         }
                       }
                       setShowMenu(false)

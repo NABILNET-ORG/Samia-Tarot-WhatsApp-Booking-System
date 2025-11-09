@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { loginEmployee, createEmployeeSession } from '@/lib/auth/session'
 import { rateLimit, resetRateLimit } from '@/lib/rate-limit'
+import { LoginSchema } from '@/lib/validation/schemas'
 
 /**
  * POST /api/auth/login - Employee login
@@ -16,7 +17,20 @@ import { rateLimit, resetRateLimit } from '@/lib/rate-limit'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password } = body
+
+    // Validate input with Zod
+    const validation = LoginSchema.safeParse(body)
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: validation.error.format()
+        },
+        { status: 400 }
+      )
+    }
+
+    const { email, password } = validation.data
 
     // Get IP address for rate limiting
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||

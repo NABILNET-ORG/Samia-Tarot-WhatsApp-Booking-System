@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { TemplateSchema } from '@/lib/validation/schemas'
 
 /**
  * GET /api/templates - List templates
@@ -38,24 +39,27 @@ export async function POST(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
       const body = await request.json()
-      const { name, description, prompt_text, category, variables_json } = body
 
-      if (!name || !prompt_text) {
+      // Validate input
+      const validation = TemplateSchema.safeParse(body)
+      if (!validation.success) {
         return NextResponse.json(
-          { error: 'name and prompt_text are required' },
+          { error: 'Invalid input', details: validation.error.issues },
           { status: 400 }
         )
       }
+
+      const validatedData = validation.data
 
       const { data: template, error } = await supabaseAdmin
         .from('prompt_templates')
         .insert({
           business_id: context.business.id,
-          name,
-          description,
-          prompt_text,
-          category: category || 'general',
-          variables_json: variables_json || [],
+          name: validatedData.name,
+          description: validatedData.description,
+          prompt_text: validatedData.prompt_text,
+          category: validatedData.category,
+          variables_json: [],
           created_by: context.employee.id,
         })
         .select()

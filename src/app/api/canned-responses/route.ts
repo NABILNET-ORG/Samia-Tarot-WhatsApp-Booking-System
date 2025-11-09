@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { CannedResponseSchema } from '@/lib/validation/schemas'
 
 /**
  * GET /api/canned-responses - List canned responses
@@ -39,23 +40,26 @@ export async function POST(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
       const body = await request.json()
-      const { title, content, category, shortcut } = body
 
-      if (!title || !content) {
+      // Validate input
+      const validation = CannedResponseSchema.safeParse(body)
+      if (!validation.success) {
         return NextResponse.json(
-          { error: 'title and content are required' },
+          { error: 'Invalid input', details: validation.error.issues },
           { status: 400 }
         )
       }
+
+      const validatedData = validation.data
 
       const { data: response, error } = await supabaseAdmin
         .from('canned_responses')
         .insert({
           business_id: context.business.id,
-          title,
-          content,
-          category: category || 'general',
-          shortcut,
+          title: validatedData.title,
+          content: validatedData.content,
+          category: validatedData.category,
+          shortcut: validatedData.shortcut,
           created_by: context.employee.id,
         })
         .select()

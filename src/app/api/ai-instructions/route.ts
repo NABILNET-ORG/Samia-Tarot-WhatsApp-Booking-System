@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requirePermission } from '@/lib/multi-tenant/middleware'
+import { UpdateAIInstructionsSchema } from '@/lib/validation/schemas'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -73,6 +74,17 @@ export async function POST(request: NextRequest) {
   return requirePermission(request, 'settings', 'write', async (context) => {
     try {
       const body = await request.json()
+
+      // Validate input
+      const validation = UpdateAIInstructionsSchema.safeParse(body)
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: validation.error.issues },
+          { status: 400 }
+        )
+      }
+
+      const validatedData = validation.data
       const {
         system_prompt,
         greeting_template,
@@ -80,7 +92,7 @@ export async function POST(request: NextRequest) {
         language_handling,
         response_length,
         special_instructions,
-      } = body
+      } = validatedData
 
       // Validate required fields
       if (!system_prompt || !greeting_template) {

@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { BulkCustomerSchema } from '@/lib/validation/schemas'
 
 /**
  * POST /api/customers/bulk - Bulk operations on customers
@@ -14,21 +15,22 @@ export async function POST(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
       const body = await request.json()
-      const { action, customer_ids } = body
 
-      if (!action || !customer_ids || !Array.isArray(customer_ids) || customer_ids.length === 0) {
+      const validation = BulkCustomerSchema.safeParse(body)
+      if (!validation.success) {
         return NextResponse.json(
-          { error: 'action and customer_ids array are required' },
+          { error: 'Validation failed', details: validation.error.format() },
           { status: 400 }
         )
       }
+      const validatedData = validation.data
 
-      switch (action) {
+      switch (validatedData.action) {
         case 'delete':
           // Bulk soft delete customers (GDPR compliant)
           const results = []
 
-          for (const customerId of customer_ids) {
+          for (const customerId of validatedData.customer_ids) {
             // Soft delete each customer
             const { error } = await supabaseAdmin
               .from('customers')
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
             action: 'customers.bulk_delete',
             resource_type: 'customer',
             details: {
-              customer_count: customer_ids.length,
+              customer_count: validatedData.customer_ids.length,
               results,
             },
             severity: 'high',
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
 
           return NextResponse.json({
             success: true,
-            message: `Bulk delete completed: ${successCount}/${customer_ids.length} customers deleted`,
+            message: `Bulk delete completed: ${successCount}/${validatedData.customer_ids.length} customers deleted`,
             results,
           })
 
@@ -89,19 +91,13 @@ export async function POST(request: NextRequest) {
           const { data: customers } = await supabaseAdmin
             .from('customers')
             .select('*')
-            .in('id', customer_ids)
+            .in('id', validatedData.customer_ids)
             .eq('business_id', context.business.id)
 
           return NextResponse.json({
             success: true,
             customers,
           })
-
-        default:
-          return NextResponse.json(
-            { error: `Unknown action: ${action}` },
-            { status: 400 }
-          )
       }
     } catch (error: any) {
       console.error('Bulk operation error:', error)

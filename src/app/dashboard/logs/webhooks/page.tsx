@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 
 interface WebhookLog {
   id: string
@@ -49,16 +50,17 @@ export default function WebhookLogsPage() {
       }
     } catch (error) {
       console.error('Error loading webhook logs:', error)
+      toast.error('Failed to load webhook logs')
     } finally {
       setLoading(false)
     }
   }
 
   const getStatusColor = (status: number) => {
-    if (status >= 200 && status < 300) return 'bg-green-100 text-green-800'
-    if (status >= 400 && status < 500) return 'bg-yellow-100 text-yellow-800'
-    if (status >= 500) return 'bg-red-100 text-red-800'
-    return 'bg-gray-100 text-gray-800'
+    if (status >= 200 && status < 300) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    if (status >= 400 && status < 500) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+    if (status >= 500) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
   }
 
   const formatDate = (dateString: string) => {
@@ -67,10 +69,10 @@ export default function WebhookLogsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Webhook Logs</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Webhook Logs</h1>
           <div className="flex gap-2">
             <select
               value={sourceFilter}
@@ -78,7 +80,7 @@ export default function WebhookLogsPage() {
                 setSourceFilter(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
             >
               <option value="">All Sources</option>
               <option value="whatsapp">WhatsApp</option>
@@ -92,7 +94,7 @@ export default function WebhookLogsPage() {
                 setStatusFilter(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
             >
               <option value="">All Status</option>
               <option value="200">Success (200)</option>
@@ -105,60 +107,60 @@ export default function WebhookLogsPage() {
 
         {loading && page === 1 ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100 mx-auto" />
           </div>
         ) : logs.length === 0 ? (
-          <div className="bg-white rounded-lg border p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
             <div className="text-6xl mb-4">🔗</div>
-            <h3 className="text-xl font-semibold mb-2">No webhook logs yet</h3>
-            <p className="text-gray-600">Incoming webhook requests will be logged here</p>
+            <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">No webhook logs yet</h3>
+            <p className="text-gray-600 dark:text-gray-400">Incoming webhook requests will be logged here</p>
           </div>
         ) : (
           <>
             <div className="space-y-4">
               {logs.map((log) => (
-                <div key={log.id} className="bg-white rounded-lg border hover:shadow-lg transition">
+                <div key={log.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition">
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded font-mono text-sm">
+                        <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded font-mono text-sm">
                           {log.method}
                         </span>
-                        <span className="text-sm text-gray-600">{log.source}</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{log.source}</span>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(log.status)}`}>
                           {log.status}
                         </span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-gray-600">{formatDate(log.created_at)}</div>
-                        <div className="text-xs text-gray-500">{log.response_time_ms}ms</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">{formatDate(log.created_at)}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500">{log.response_time_ms}ms</div>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <code className="text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                      <code className="text-sm text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30 px-2 py-1 rounded">
                         {log.path}
                       </code>
                     </div>
 
                     {log.error_message && (
-                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
-                        <p className="text-sm text-red-800">
+                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded">
+                        <p className="text-sm text-red-800 dark:text-red-200">
                           <strong>Error:</strong> {log.error_message}
                         </p>
                       </div>
                     )}
 
                     <details className="cursor-pointer">
-                      <summary className="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                      <summary className="text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-sm font-medium">
                         View Request/Response Details
                       </summary>
                       <div className="mt-4 space-y-4">
                         {/* Request Headers */}
                         {log.request_headers && (
                           <div>
-                            <h4 className="text-sm font-semibold mb-2">Request Headers</h4>
-                            <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-40">
+                            <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Request Headers</h4>
+                            <pre className="text-xs bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-3 rounded overflow-auto max-h-40 border border-gray-200 dark:border-gray-700">
                               {JSON.stringify(log.request_headers, null, 2)}
                             </pre>
                           </div>
@@ -167,8 +169,8 @@ export default function WebhookLogsPage() {
                         {/* Request Body */}
                         {log.request_body && (
                           <div>
-                            <h4 className="text-sm font-semibold mb-2">Request Body</h4>
-                            <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-60">
+                            <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Request Body</h4>
+                            <pre className="text-xs bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-3 rounded overflow-auto max-h-60 border border-gray-200 dark:border-gray-700">
                               {JSON.stringify(log.request_body, null, 2)}
                             </pre>
                           </div>
@@ -177,8 +179,8 @@ export default function WebhookLogsPage() {
                         {/* Response Body */}
                         {log.response_body && (
                           <div>
-                            <h4 className="text-sm font-semibold mb-2">Response Body</h4>
-                            <pre className="text-xs bg-gray-50 p-3 rounded overflow-auto max-h-60">
+                            <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-white">Response Body</h4>
+                            <pre className="text-xs bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-3 rounded overflow-auto max-h-60 border border-gray-200 dark:border-gray-700">
                               {JSON.stringify(log.response_body, null, 2)}
                             </pre>
                           </div>
@@ -196,17 +198,17 @@ export default function WebhookLogsPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
-                <span className="text-gray-700">
+                <span className="text-gray-700 dark:text-gray-300">
                   Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

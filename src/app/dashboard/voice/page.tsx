@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { VoicePlayer } from '@/components/chat/VoicePlayer'
 
 interface VoiceMessage {
@@ -51,6 +52,7 @@ export default function VoiceMessagesPage() {
       }
     } catch (error) {
       console.error('Error loading voice messages:', error)
+      toast.error('Failed to load voice messages')
     } finally {
       setLoading(false)
     }

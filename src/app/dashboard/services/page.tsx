@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import ServiceModal from '@/components/modals/ServiceModal'
+import toast from 'react-hot-toast'
 
 interface Service {
   id?: string
@@ -97,7 +98,7 @@ export default function ServicesPage() {
       await loadServices()
     } catch (error) {
       console.error('Error deleting service:', error)
-      alert('Failed to delete service')
+      toast.error('Failed to delete service')
     }
   }
 

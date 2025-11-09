@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { hashPassword } from '@/lib/auth/session'
 import { validatePassword } from '@/lib/validation/password'
+import { ResetPasswordSchema } from '@/lib/validation/schemas'
 
 /**
  * POST /api/auth/reset-password
@@ -15,35 +16,20 @@ import { validatePassword } from '@/lib/validation/password'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { token, new_password } = body
 
-    // Validate inputs
-    if (!token || !new_password) {
-      return NextResponse.json(
-        { error: 'Token and new password are required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate token format (should be 64 hex chars)
-    if (!/^[a-f0-9]{64}$/.test(token)) {
-      return NextResponse.json(
-        { error: 'Invalid token format' },
-        { status: 400 }
-      )
-    }
-
-    // Validate password complexity
-    const passwordValidation = validatePassword(new_password)
-    if (!passwordValidation.valid) {
+    // Validate input with Zod
+    const validation = ResetPasswordSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
         {
-          error: 'Password does not meet requirements',
-          details: passwordValidation.errors,
+          error: 'Validation failed',
+          details: validation.error.format()
         },
         { status: 400 }
       )
     }
+
+    const { token, new_password } = validation.data
 
     // Find valid reset token
     const { data: resetToken } = await supabaseAdmin

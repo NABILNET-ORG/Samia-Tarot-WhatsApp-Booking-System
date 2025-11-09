@@ -8,6 +8,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { processMessageWithAI } from '@/lib/ai/conversation-engine'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/multi-tenant-provider'
+import { requireInternalApiKey } from '@/lib/security/api-keys'
+import { z } from 'zod'
+
+// Validation schema for the request
+const processMessageSchema = z.object({
+  business_id: z.string().uuid('Invalid business_id'),
+  phone: z.string().min(7, 'Invalid phone number'),
+  message: z.string().min(1, 'Message cannot be empty'),
+  media_url: z.string().url().optional(),
+  media_type: z.enum(['text', 'voice', 'image', 'document', 'video', 'audio']).optional(),
+})
 
 /**
  * POST /api/webhook/process-message
@@ -18,27 +29,31 @@ import { sendWhatsAppMessage } from '@/lib/whatsapp/multi-tenant-provider'
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify internal API key
-    const internalKey = request.headers.get('x-internal-api-key')
-    const expectedKey = process.env.INTERNAL_API_KEY || 'dev-internal-key-change-in-production'
-
-    if (internalKey !== expectedKey) {
+    // Verify internal API key with timing-safe comparison
+    const keyValidation = requireInternalApiKey(request)
+    if (!keyValidation.valid) {
       console.warn('⚠️ Unauthorized access attempt to internal webhook processor')
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Invalid internal API key' },
+        { error: 'Unauthorized', message: keyValidation.error },
         { status: 403 }
       )
     }
 
     const body = await request.json()
-    const { business_id, phone, message, media_url, media_type } = body
 
-    if (!business_id || !phone || !message) {
+    // Validate request body with Zod
+    const validation = processMessageSchema.safeParse(body)
+    if (!validation.success) {
       return NextResponse.json(
-        { error: 'business_id, phone, and message are required' },
+        {
+          error: 'Validation failed',
+          details: validation.error.format()
+        },
         { status: 400 }
       )
     }
+
+    const { business_id, phone, message, media_url, media_type } = validation.data
 
     // Get or create conversation
     let { data: conversation } = await supabaseAdmin
