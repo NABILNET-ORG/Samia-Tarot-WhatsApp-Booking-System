@@ -34,11 +34,13 @@ CREATE TABLE IF NOT EXISTS automation_workflows (
   times_executed INTEGER DEFAULT 0,
   success_count INTEGER DEFAULT 0,
   failure_count INTEGER DEFAULT 0,
-  avg_completion_time_seconds INTEGER,
-
-  CONSTRAINT unique_active_workflow_per_business UNIQUE (business_id, is_active)
-    WHERE is_active = true AND trigger_type = 'new_conversation'
+  avg_completion_time_seconds INTEGER
 );
+
+-- Add partial unique index for active workflows
+CREATE UNIQUE INDEX unique_active_workflow_per_business
+  ON automation_workflows(business_id)
+  WHERE is_active = true AND trigger_type = 'new_conversation';
 
 -- ==========================================
 -- TABLE: workflow_steps
