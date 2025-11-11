@@ -24,17 +24,28 @@ export async function GET(request: NextRequest) {
     try {
       const { data: workflows, error } = await supabaseAdmin
         .from('automation_workflows')
-        .select(`
-          *,
-          created_by_employee:employees!automation_workflows_created_by_fkey(full_name),
-          step_count:workflow_steps(count)
-        `)
+        .select('*')
         .eq('business_id', context.business.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
-      return NextResponse.json({ workflows: workflows || [] })
+      // Get step count for each workflow
+      const workflowsWithCounts = await Promise.all(
+        (workflows || []).map(async (workflow: any) => {
+          const { count } = await supabaseAdmin
+            .from('workflow_steps')
+            .select('*', { count: 'exact', head: true })
+            .eq('workflow_id', workflow.id)
+
+          return {
+            ...workflow,
+            step_count: count || 0
+          }
+        })
+      )
+
+      return NextResponse.json({ workflows: workflowsWithCounts })
     } catch (error: any) {
       console.error('Failed to fetch workflows:', error)
       return NextResponse.json(
