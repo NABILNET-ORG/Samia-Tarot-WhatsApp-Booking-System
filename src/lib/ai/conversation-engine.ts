@@ -89,13 +89,14 @@ export async function processMessageWithAI(
       .order('sort_order')
       .then((r: any) => r.data || []),
 
-    // Knowledge Base (website content)
+    // Knowledge Base (website content) - LIMIT to 5 most recent
     supabaseAdmin
       .from('knowledge_base_content')
       .select('source_url, title, content')
       .eq('business_id', businessId)
       .eq('is_active', true)
-      .limit(20)
+      .order('last_updated', { ascending: false })
+      .limit(5)
       .then((r: any) => r.data || []),
 
     // Employees
@@ -107,13 +108,13 @@ export async function processMessageWithAI(
       .limit(10)
       .then((r: any) => r.data || []),
 
-    // Canned Responses/Templates
+    // Canned Responses/Templates - LIMIT to 5 most used
     supabaseAdmin
       .from('canned_responses')
       .select('name, content, category')
       .eq('business_id', businessId)
       .eq('is_active', true)
-      .limit(20)
+      .limit(5)
       .then((r: any) => r.data || [])
   ])
 
@@ -154,12 +155,13 @@ export async function processMessageWithAI(
     })
   }
 
-  // Knowledge base from website
+  // Knowledge base from website - REDUCED to 800 chars per page to fit token limit
   let knowledgeContext = ''
   if (knowledgeBase.length > 0) {
     knowledgeContext = '\n\n## KNOWLEDGE BASE (from website):\n'
     knowledgeBase.forEach((kb: any) => {
-      knowledgeContext += `### ${kb.title}\nSource: ${kb.source_url}\n${kb.content.substring(0, 3000)}\n\n---\n\n`
+      // Extract first 800 chars only (roughly 200 tokens per page × 5 pages = 1000 tokens)
+      knowledgeContext += `### ${kb.title}\n${kb.content.substring(0, 800)}\n\n`
     })
   }
 
@@ -172,12 +174,14 @@ export async function processMessageWithAI(
     })
   }
 
-  // Templates/FAQs
+  // Templates/FAQs - Keep short summaries only
   let templatesContext = ''
   if (templates.length > 0) {
     templatesContext = '\n\n## COMMON RESPONSES:\n'
     templates.forEach((t: any) => {
-      templatesContext += `**${t.name}** (${t.category}):\n${t.content}\n\n`
+      // Limit each template to 200 chars
+      const shortContent = t.content.substring(0, 200) + (t.content.length > 200 ? '...' : '')
+      templatesContext += `**${t.name}**: ${shortContent}\n`
     })
   }
 
@@ -218,9 +222,9 @@ export async function processMessageWithAI(
       { role: 'user', content: userMessage },
     ]
 
-    // Call OpenAI
+    // Call OpenAI - Use gpt-4o for larger context (128k tokens)
     const completion = await openai.chat.completions.create({
-      model: business.ai_model || 'gpt-4',
+      model: business.ai_model || 'gpt-4o',
       messages,
       temperature: business.ai_temperature || 0.7,
       max_tokens: business.ai_max_tokens || 700,
