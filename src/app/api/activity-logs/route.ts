@@ -6,8 +6,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 import { supabaseAdmin } from '@/lib/supabase/client'
+import { z } from 'zod'
+import { validateInput } from '@/lib/validation/schemas'
 
 export const dynamic = 'force-dynamic'
+
+// Extended schema for activity logs with date filters
+const ActivityLogsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(50),
+  action: z.string().optional(),
+  employee_id: z.string().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+})
 
 /**
  * GET /api/activity-logs
@@ -16,13 +28,18 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
-      const searchParams = request.nextUrl.searchParams
-      const page = parseInt(searchParams.get('page') || '1')
-      const limit = parseInt(searchParams.get('limit') || '50')
-      const action = searchParams.get('action')
-      const employeeId = searchParams.get('employee_id')
-      const startDate = searchParams.get('start_date')
-      const endDate = searchParams.get('end_date')
+      // Validate query parameters
+      const queryParams = Object.fromEntries(request.nextUrl.searchParams)
+      const validation = validateInput(ActivityLogsQuerySchema, queryParams)
+
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Invalid query parameters', details: validation.errors },
+          { status: 400 }
+        )
+      }
+
+      const { page, limit, action, employee_id: employeeId, start_date: startDate, end_date: endDate } = validation.data
 
       const offset = (page - 1) * limit
 

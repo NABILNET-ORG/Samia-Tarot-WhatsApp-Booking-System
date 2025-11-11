@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 import { supabaseAdmin } from '@/lib/supabase/client'
+import { AnalyticsExportSchema, validateInput } from '@/lib/validation/schemas'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -8,10 +9,18 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
-      const format = request.nextUrl.searchParams.get('format') || 'json'
-      const type = request.nextUrl.searchParams.get('type') || 'conversations'
-      const startDate = request.nextUrl.searchParams.get('start_date')
-      const endDate = request.nextUrl.searchParams.get('end_date')
+      // Validate query parameters
+      const queryParams = Object.fromEntries(request.nextUrl.searchParams)
+      const validation = validateInput(AnalyticsExportSchema, queryParams)
+
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Invalid query parameters', details: validation.errors },
+          { status: 400 }
+        )
+      }
+
+      const { format = 'json', type = 'conversations', start_date: startDate, end_date: endDate } = validation.data
 
       let data: any[] = []
 

@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { resetWhatsAppProvider } from '@/lib/whatsapp/factory'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { AdminProviderSchema } from '@/lib/validation/schemas'
 
 export async function POST(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
@@ -22,15 +23,17 @@ export async function POST(request: NextRequest) {
       }
 
       const body = await request.json()
-      const { provider } = body
+      const validationResult = AdminProviderSchema.safeParse(body)
 
-      // Validate provider
-      if (provider !== 'meta' && provider !== 'twilio') {
+      if (!validationResult.success) {
         return NextResponse.json(
-          { error: 'Invalid provider. Must be "meta" or "twilio"' },
+          { error: 'Validation failed', details: validationResult.error.issues },
           { status: 400 }
         )
       }
+
+      const validatedData = validationResult.data
+      const { provider } = validatedData
 
       // Update in database
       const { error } = await supabaseAdmin

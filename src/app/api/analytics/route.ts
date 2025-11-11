@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { AnalyticsQuerySchema, validateInput } from '@/lib/validation/schemas'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -8,6 +9,17 @@ export const runtime = 'nodejs'
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
+      // Validate query parameters
+      const queryParams = Object.fromEntries(request.nextUrl.searchParams)
+      const validation = validateInput(AnalyticsQuerySchema, queryParams)
+
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Invalid query parameters', details: validation.errors },
+          { status: 400 }
+        )
+      }
+
       // Get overview stats
       const [conversationsResult, bookingsResult, customersResult, revenueResult] = await Promise.all([
         supabaseAdmin.from('conversations').select('id', { count: 'exact', head: true }).eq('business_id', context.business.id),

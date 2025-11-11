@@ -6,8 +6,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
 import { supabaseAdmin } from '@/lib/supabase/client'
+import { z } from 'zod'
+import { validateInput } from '@/lib/validation/schemas'
 
 export const dynamic = 'force-dynamic'
+
+// Extended schema for webhook logs with date filters
+const WebhookLogsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(50),
+  status: z.string().optional(),
+  source: z.string().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+}).transform(data => ({
+  page: typeof data.page === 'string' ? parseInt(data.page) : data.page,
+  limit: typeof data.limit === 'string' ? parseInt(data.limit) : data.limit,
+  status: data.status,
+  source: data.source,
+  start_date: data.start_date,
+  end_date: data.end_date,
+}))
 
 /**
  * GET /api/webhook-logs
@@ -16,13 +35,18 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: NextRequest) {
   return requireBusinessContext(request, async (context) => {
     try {
-      const searchParams = request.nextUrl.searchParams
-      const page = parseInt(searchParams.get('page') || '1')
-      const limit = parseInt(searchParams.get('limit') || '50')
-      const status = searchParams.get('status')
-      const source = searchParams.get('source')
-      const startDate = searchParams.get('start_date')
-      const endDate = searchParams.get('end_date')
+      // Validate query parameters
+      const queryParams = Object.fromEntries(request.nextUrl.searchParams)
+      const validation = validateInput(WebhookLogsQuerySchema, queryParams)
+
+      if (!validation.success) {
+        return NextResponse.json(
+          { error: 'Invalid query parameters', details: validation.errors },
+          { status: 400 }
+        )
+      }
+
+      const { page, limit, status, source, start_date: startDate, end_date: endDate } = validation.data
 
       const offset = (page - 1) * limit
 

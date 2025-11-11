@@ -251,6 +251,63 @@ export const BulkCustomerSchema = z.object({
   customer_ids: z.array(z.string().uuid()).min(1, 'At least one customer must be selected'),
 })
 
+// ==================== ADMIN SCHEMAS ====================
+
+export const AdminProviderSchema = z.object({
+  provider: z.enum(['meta', 'twilio']),
+})
+
+export const AdminServiceSchema = z.object({
+  name_english: z.string().min(1).max(200),
+  name_arabic: z.string().min(1).max(200),
+  price: z.number().positive(),
+  service_type: z.enum(['reading', 'call', 'support']).optional(),
+})
+
+// ==================== ANALYTICS SCHEMAS ====================
+
+export const AnalyticsQuerySchema = z.object({
+  start_date: z.string().datetime().optional(),
+  end_date: z.string().datetime().optional(),
+  period: z.enum(['day', 'week', 'month', 'year']).optional(),
+})
+
+export const AnalyticsExportSchema = z.object({
+  type: z.enum(['conversations', 'bookings', 'revenue', 'customers']),
+  format: z.enum(['csv', 'json', 'xlsx']).default('csv'),
+  start_date: z.string().datetime().optional(),
+  end_date: z.string().datetime().optional(),
+})
+
+export const LogsFilterSchema = z.object({
+  page: z.number().int().positive().optional(),
+  limit: z.number().int().positive().max(100).optional(),
+  action: z.string().optional(),
+  status: z.string().optional(),
+  source: z.string().optional(),
+})
+
+// ==================== SUBSCRIPTION SCHEMAS ====================
+
+export const SubscriptionCheckoutSchema = z.object({
+  priceId: z.string().min(1),
+  successUrl: z.string().url().optional(),
+  cancelUrl: z.string().url().optional(),
+})
+
+export const SubscriptionManageSchema = z.object({
+  action: z.enum(['cancel', 'update', 'resume']).optional(),
+  return_url: z.string().url().optional(),
+})
+
+// ==================== VOICE SCHEMAS ====================
+
+export const VoiceTranscribeSchema = z.object({
+  audio_url: z.string().url(),
+  language: z.string().default('en'),
+  conversation_id: z.string().uuid().optional(),
+})
+
 // ==================== SANITIZATION HELPERS ====================
 
 /**

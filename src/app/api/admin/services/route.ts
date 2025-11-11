@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ServiceHelpers } from '@/lib/supabase/services'
 import { supabaseAdmin } from '@/lib/supabase/client'
 import { requireBusinessContext } from '@/lib/multi-tenant/middleware'
+import { AdminServiceSchema } from '@/lib/validation/schemas'
 
 /**
  * GET - Get all services
@@ -66,6 +67,16 @@ export async function POST(request: NextRequest) {
       }
 
       const body = await request.json()
+      const validationResult = AdminServiceSchema.safeParse(body)
+
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: validationResult.error.issues },
+          { status: 400 }
+        )
+      }
+
+      const validatedData = validationResult.data
       const { serviceId, action, data } = body
 
       switch (action) {
@@ -142,6 +153,16 @@ export async function PUT(request: NextRequest) {
       }
 
       const body = await request.json()
+      const validationResult = AdminServiceSchema.safeParse(body)
+
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: validationResult.error.issues },
+          { status: 400 }
+        )
+      }
+
+      const validatedData = validationResult.data
       const { action, serviceIds, data } = body
 
       switch (action) {
