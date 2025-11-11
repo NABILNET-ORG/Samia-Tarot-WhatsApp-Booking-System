@@ -282,6 +282,10 @@ export default function AdminDashboardPage() {
               <div className="text-2xl mb-1">🎤</div>
               <div className="text-sm font-medium text-gray-900 dark:text-white">Voice</div>
             </a>
+            <a href="/dashboard/admin/workflows" className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors text-center border-2 border-purple-300 dark:border-purple-700">
+              <div className="text-2xl mb-1">🤖</div>
+              <div className="text-sm font-medium text-purple-900 dark:text-purple-100">Automation Workflows</div>
+            </a>
           </div>
         </div>
 
