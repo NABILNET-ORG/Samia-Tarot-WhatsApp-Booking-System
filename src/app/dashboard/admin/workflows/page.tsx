@@ -127,6 +127,52 @@ export default function WorkflowsPage() {
     }
   }
 
+  async function handleDuplicate(workflowId: string, workflowName: string) {
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}/duplicate`, {
+        method: 'POST',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success(`Duplicated "${workflowName}" with ${data.steps_copied} steps`)
+        loadWorkflows()
+      } else {
+        toast.error('Failed to duplicate workflow')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to duplicate workflow')
+    }
+  }
+
+  async function handleRestoreDefault() {
+    if (!confirm('Restore default workflow? This will create a new workflow with the standard booking flow.')) return
+
+    try {
+      // Create new workflow with default steps
+      const response = await fetch('/api/workflows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Default Booking Flow (Restored)',
+          description: 'Standard conversation flow: Greeting → Services → Selection → Info → Booking → Payment',
+          is_default: false,
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Default workflow template created - Now add steps to configure it')
+        loadWorkflows()
+      } else {
+        toast.error('Failed to create default workflow')
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to restore default')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -140,12 +186,20 @@ export default function WorkflowsPage() {
               Customize your conversation automation flow
             </p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-          >
-            + New Workflow
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleRestoreDefault}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              ↺ Restore Default
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            >
+              + New Workflow
+            </button>
+          </div>
         </div>
 
         {/* Info Card */}
@@ -228,28 +282,34 @@ export default function WorkflowsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => router.push(`/dashboard/admin/workflows/${workflow.id}/edit`)}
-                    className="flex-1 px-3 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                    className="px-3 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
                   >
-                    Edit
+                    ✏️ Edit
                   </button>
                   <button
                     onClick={() => handleActivate(workflow.id, workflow.is_active)}
-                    className={`flex-1 px-3 py-2 text-sm rounded ${
+                    className={`px-3 py-2 text-sm rounded ${
                       workflow.is_active
                         ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                         : 'bg-green-600 text-white hover:bg-green-700'
                     }`}
                   >
-                    {workflow.is_active ? 'Deactivate' : 'Activate'}
+                    {workflow.is_active ? '⏸️ Deactivate' : '▶️ Activate'}
+                  </button>
+                  <button
+                    onClick={() => handleDuplicate(workflow.id, workflow.name)}
+                    className="px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                  >
+                    📋 Clone
                   </button>
                   <button
                     onClick={() => handleDelete(workflow.id, workflow.name)}
                     className="px-3 py-2 bg-red-600 text-white text-sm rounded hover:bg-red-700"
                   >
-                    🗑️
+                    🗑️ Delete
                   </button>
                 </div>
               </div>
