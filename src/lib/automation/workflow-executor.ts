@@ -107,15 +107,73 @@ export async function getWorkflowExecution(
 export async function getCurrentStep(
   execution: WorkflowExecution
 ): Promise<WorkflowStep | null> {
-  if (!execution.current_step_id) return null
+  if (!execution.current_step_id && !execution.current_step_key) return null
 
-  const { data } = await supabaseAdmin
-    .from('workflow_steps')
-    .select('*')
-    .eq('id', execution.current_step_id)
-    .single()
+  let data
+
+  if (execution.current_step_id) {
+    const result = await supabaseAdmin
+      .from('workflow_steps')
+      .select('*')
+      .eq('id', execution.current_step_id)
+      .single()
+    data = result.data
+  } else if (execution.current_step_key) {
+    // Fallback to finding by step_key
+    const result = await supabaseAdmin
+      .from('workflow_steps')
+      .select('*')
+      .eq('workflow_id', execution.workflow_id)
+      .eq('step_key', execution.current_step_key)
+      .single()
+    data = result.data
+  }
 
   return data as WorkflowStep | null
+}
+
+/**
+ * Resolve step_key to actual step ID
+ */
+async function resolveStepKey(workflowId: string, stepKey: string): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from('workflow_steps')
+    .select('id')
+    .eq('workflow_id', workflowId)
+    .eq('step_key', stepKey)
+    .single()
+
+  return data?.id || null
+}
+
+/**
+ * Get next step ID (handles both direct ID and step_key resolution)
+ */
+async function getNextStepId(
+  execution: WorkflowExecution,
+  step: WorkflowStep,
+  nextStepKey?: string
+): Promise<string | null> {
+  // Priority: direct next_step_id > step_key from config > sequential by position
+  if (step.next_step_id) {
+    return step.next_step_id
+  }
+
+  if (nextStepKey) {
+    return await resolveStepKey(execution.workflow_id, nextStepKey)
+  }
+
+  // Get next step by position
+  const { data } = await supabaseAdmin
+    .from('workflow_steps')
+    .select('id')
+    .eq('workflow_id', execution.workflow_id)
+    .gt('position', step.position)
+    .order('position')
+    .limit(1)
+    .single()
+
+  return data?.id || null
 }
 
 /**
@@ -138,7 +196,7 @@ export async function executeStep(
     case 'message':
       // Send message to customer
       result.message = step.config.text || step.config.message
-      result.nextStepId = step.next_step_id
+      result.nextStepId = await getNextStepId(execution, step)
       break
 
     case 'question':
@@ -163,7 +221,7 @@ export async function executeStep(
             ...execution.variables,
             [variableName]: customerResponse
           }
-          result.nextStepId = step.next_step_id
+          result.nextStepId = await getNextStepId(execution, step)
         }
       }
       break
@@ -191,22 +249,30 @@ export async function executeStep(
           break
       }
 
-      result.nextStepId = conditionMet
-        ? step.config.true_step || step.config.next_step_on_success
-        : step.config.false_step || step.config.next_step_on_failure
+      // Resolve step keys for conditional branching
+      const trueStepKey = step.config.true_step
+      const falseStepKey = step.config.false_step
+
+      if (conditionMet) {
+        result.nextStepId = step.config.next_step_on_success ||
+          (trueStepKey ? await resolveStepKey(execution.workflow_id, trueStepKey) : null)
+      } else {
+        result.nextStepId = step.config.next_step_on_failure ||
+          (falseStepKey ? await resolveStepKey(execution.workflow_id, falseStepKey) : null)
+      }
       break
 
     case 'action':
       // Execute action
       await executeAction(step.config, execution.variables)
-      result.nextStepId = step.next_step_id
+      result.nextStepId = await getNextStepId(execution, step)
       break
 
     case 'ai_response':
       // Let AI handle this step
       result.message = null // AI will generate response
       result.useAI = true
-      result.nextStepId = step.next_step_id
+      result.nextStepId = await getNextStepId(execution, step)
       break
   }
 
@@ -257,6 +323,19 @@ export async function moveToNextStep(
   const updates: any = {
     current_step_id: nextStepId,
     last_activity_at: new Date().toISOString(),
+  }
+
+  // Also update current_step_key for better debugging
+  if (nextStepId) {
+    const { data: nextStep } = await supabaseAdmin
+      .from('workflow_steps')
+      .select('step_key')
+      .eq('id', nextStepId)
+      .single()
+
+    if (nextStep) {
+      updates.current_step_key = nextStep.step_key
+    }
   }
 
   if (variables) {
