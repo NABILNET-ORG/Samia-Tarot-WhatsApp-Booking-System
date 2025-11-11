@@ -70,6 +70,13 @@ export async function processMessageWithAI(
     throw new Error('Conversation not found')
   }
 
+  // Load AI instructions (configured in dashboard)
+  const { data: aiInstructions } = await supabaseAdmin
+    .from('ai_instructions')
+    .select('*')
+    .eq('business_id', businessId)
+    .single()
+
   // Load services for this business
   const { data: services } = await supabaseAdmin
     .from('services')
@@ -78,19 +85,10 @@ export async function processMessageWithAI(
     .eq('is_active', true)
     .order('sort_order')
 
-  // Load prompt template for current state
-  const { data: template } = await supabaseAdmin
-    .from('prompt_templates')
-    .select('*')
-    .eq('business_id', businessId)
-    .eq('state_name', currentState)
-    .eq('is_active', true)
-    .single()
-
   // Load knowledge base content
   const { data: knowledgeBase } = await supabaseAdmin
     .from('knowledge_base_content')
-    .select('url, title, content')
+    .select('source_url, title, content')
     .eq('business_id', businessId)
     .eq('is_active', true)
     .limit(20)
@@ -98,38 +96,66 @@ export async function processMessageWithAI(
   // Build knowledge base context
   let knowledgeContext = ''
   if (knowledgeBase && knowledgeBase.length > 0) {
-    knowledgeContext = '\n\n## Business Knowledge Base:\n' +
+    knowledgeContext = '\n\n## Business Knowledge Base (from website):\n' +
       knowledgeBase.map((kb: any) =>
-        `### ${kb.title || kb.url}\n${kb.content.substring(0, 2000)}`
-      ).join('\n\n')
+        `### ${kb.title}\nSource: ${kb.source_url}\n${kb.content.substring(0, 3000)}`
+      ).join('\n\n---\n\n')
   }
 
-  // Build system prompt with knowledge base
-  const basePrompt = template?.content || getDefaultPrompt(currentState, business, services || [])
-  const systemPrompt = basePrompt + knowledgeContext
+  // Build services list
+  let servicesContext = ''
+  if (services && services.length > 0) {
+    servicesContext = '\n\n## Available Services:\n' +
+      services.map((s: any, i: number) =>
+        `${i + 1}. **${s.name_english}** (${s.name_arabic})\n   - Price: $${s.price}\n   - Duration: ${s.duration_minutes} minutes\n   - ${s.description_english || ''}`
+      ).join('\n')
+  }
+
+  // Build system prompt with AI instructions + knowledge base + services
+  let systemPrompt = ''
+
+  if (aiInstructions?.system_prompt) {
+    // Use configured AI instructions
+    systemPrompt = aiInstructions.system_prompt
+  } else {
+    // Fallback to default
+    systemPrompt = getDefaultPrompt(currentState, business, services || [])
+  }
+
+  // Add knowledge base and services to the system prompt
+  systemPrompt = systemPrompt + knowledgeContext + servicesContext
 
   // Build conversation history for context
   const messageHistory = conversation.message_history || []
   const recentHistory = messageHistory.slice(-10) // Last 10 messages
 
-  const messages: any[] = [
-    { role: 'system', content: systemPrompt },
-    ...recentHistory.map((msg: any) => ({
-      role: msg.role === 'user' ? 'user' : 'assistant',
-      content: msg.content,
-    })),
-    { role: 'user', content: userMessage },
-  ]
+  // Special handling for GREETING state - use greeting template if available
+  let aiMessage = ''
 
-  // Call OpenAI
-  const completion = await openai.chat.completions.create({
-    model: business.ai_model || 'gpt-4',
-    messages,
-    temperature: business.ai_temperature || 0.7,
-    max_tokens: business.ai_max_tokens || 700,
-  })
+  if (currentState === 'GREETING' && aiInstructions?.greeting_template && recentHistory.length === 0) {
+    // First message - use configured greeting
+    aiMessage = aiInstructions.greeting_template
+  } else {
+    // Build messages for OpenAI
+    const messages: any[] = [
+      { role: 'system', content: systemPrompt },
+      ...recentHistory.map((msg: any) => ({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+      { role: 'user', content: userMessage },
+    ]
 
-  const aiMessage = completion.choices[0].message.content || 'Sorry, I could not understand that.'
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model: business.ai_model || 'gpt-4',
+      messages,
+      temperature: business.ai_temperature || 0.7,
+      max_tokens: business.ai_max_tokens || 700,
+    })
+
+    aiMessage = completion.choices[0].message.content || 'Sorry, I could not understand that.'
+  }
 
   // Parse response and determine new state
   const { newState, actions } = parseAIResponse(aiMessage, currentState, conversation)
