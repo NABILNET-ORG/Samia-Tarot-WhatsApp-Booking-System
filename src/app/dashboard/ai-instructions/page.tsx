@@ -40,6 +40,8 @@ export default function AIInstructionsPage() {
   const [newUrl, setNewUrl] = useState('')
   const [fetchedKnowledge, setFetchedKnowledge] = useState<any[]>([])
   const [showKnowledgeDetails, setShowKnowledgeDetails] = useState(false)
+  const [fetchMode, setFetchMode] = useState<'single' | 'entire'>('single')
+  const [crawlProgress, setCrawlProgress] = useState<string>('')
 
   useEffect(() => {
     if (business?.id) {
@@ -117,22 +119,43 @@ export default function AIInstructionsPage() {
   async function refreshKnowledgeBase() {
     try {
       setSaving(true)
+      setCrawlProgress('')
+
+      if (fetchMode === 'entire') {
+        toast.success('Starting website crawl... This may take a few minutes')
+      }
+
       const response = await fetch('/api/knowledge-base/refresh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: knowledgeUrls })
+        body: JSON.stringify({
+          urls: knowledgeUrls,
+          mode: fetchMode
+        })
       })
+
+      const data = await response.json()
+
       if (response.ok) {
-        toast.success('Knowledge base refreshed successfully')
+        const successCount = data.successful || 0
+        const totalPages = data.totalPagesCrawled || knowledgeUrls.length
+
+        if (fetchMode === 'entire') {
+          toast.success(`Knowledge base refreshed! Crawled ${totalPages} pages from ${successCount} websites`)
+        } else {
+          toast.success(`Knowledge base refreshed! Fetched ${successCount} pages`)
+        }
+
         // Reload fetched knowledge to show updated data
         await loadFetchedKnowledge()
       } else {
-        toast.error('Failed to refresh knowledge base')
+        toast.error(data.error || 'Failed to refresh knowledge base')
       }
     } catch (error) {
       toast.error('Error refreshing knowledge base')
     } finally {
       setSaving(false)
+      setCrawlProgress('')
     }
   }
 
@@ -455,7 +478,74 @@ export default function AIInstructionsPage() {
               {/* Knowledge Base */}
               <div>
                 <h2 className="text-xl font-bold mb-4">Knowledge Base (RAG)</h2>
-                <p className="text-sm text-gray-600 mb-4">Add up to 20 website URLs. The AI will fetch content from these websites to answer business-specific questions.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Add up to 20 website URLs. The AI will fetch content from these websites to answer business-specific questions.</p>
+
+                {/* Fetch Mode Selection */}
+                <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                    Fetch Mode
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFetchMode('single')}
+                      className={`p-4 rounded-lg border-2 transition-all text-left ${
+                        fetchMode === 'single'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span className="font-medium text-gray-900 dark:text-white">Single Page</span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Fetch only the exact URL you provide. Fast and focused.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFetchMode('entire')}
+                      className={`p-4 rounded-lg border-2 transition-all text-left ${
+                        fetchMode === 'entire'
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <span className="font-medium text-gray-900 dark:text-white">Entire Website</span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Crawl all pages, sublinks, and services. More comprehensive (slower).
+                      </p>
+                    </button>
+                  </div>
+
+                  {fetchMode === 'entire' && (
+                    <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <svg className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                          <p className="text-sm font-medium text-yellow-900 dark:text-yellow-200">Crawling entire websites</p>
+                          <p className="text-xs text-yellow-800 dark:text-yellow-300 mt-1">
+                            • May take 2-5 minutes per website<br />
+                            • Crawls up to 50 pages per domain<br />
+                            • Stays within the same domain<br />
+                            • Respects robots.txt
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Add URL Input */}
                 <div className="flex gap-2 mb-4">
@@ -508,19 +598,36 @@ export default function AIInstructionsPage() {
 
                 {knowledgeUrls.length > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">{knowledgeUrls.length} / 20 websites added</p>
-                        <p className="text-xs text-blue-700 dark:text-blue-300">Click "Refresh Knowledge" to fetch latest content from websites</p>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-sm font-medium text-blue-900 dark:text-blue-200">{knowledgeUrls.length} / 20 websites added</p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            {fetchMode === 'entire' ? 'Will crawl entire websites including all pages' : 'Will fetch only the exact URLs'}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={refreshKnowledgeBase}
+                          disabled={saving}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm whitespace-nowrap flex items-center gap-2"
+                        >
+                          {saving && (
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          )}
+                          {saving ? (fetchMode === 'entire' ? 'Crawling...' : 'Fetching...') : 'Refresh Knowledge'}
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={refreshKnowledgeBase}
-                        disabled={saving}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
-                      >
-                        {saving ? 'Fetching...' : 'Refresh Knowledge'}
-                      </button>
+
+                      {/* Crawl Progress */}
+                      {saving && crawlProgress && (
+                        <div className="mt-2 p-2 bg-white dark:bg-gray-800 rounded text-xs text-gray-700 dark:text-gray-300">
+                          {crawlProgress}
+                        </div>
+                      )}
                     </div>
 
                     {/* Fetched Knowledge Display */}
