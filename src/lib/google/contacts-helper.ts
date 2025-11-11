@@ -45,9 +45,9 @@ export async function checkContactExists(
       return {
         exists: true,
         contact: {
-          name_english: contact?.names?.[0]?.displayName,
-          email: contact?.emailAddresses?.[0]?.value,
-          resourceName: response.data.results[0].person?.resourceName,
+          name_english: contact?.names?.[0]?.displayName || undefined,
+          email: contact?.emailAddresses?.[0]?.value || undefined,
+          resourceName: response.data.results[0].person?.resourceName || undefined,
         }
       }
     }
@@ -115,7 +115,7 @@ export async function saveToGoogleContacts(
 
     return {
       success: true,
-      resourceName: contact.data.resourceName
+      resourceName: contact.data.resourceName || undefined
     }
   } catch (error) {
     console.error('Error saving to Google Contacts:', error)

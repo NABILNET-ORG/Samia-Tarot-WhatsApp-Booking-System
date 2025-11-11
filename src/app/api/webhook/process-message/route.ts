@@ -9,6 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase/client'
 import { processMessageWithAI } from '@/lib/ai/conversation-engine'
 import { sendWhatsAppMessage } from '@/lib/whatsapp/multi-tenant-provider'
 import { requireInternalApiKey } from '@/lib/security/api-keys'
+import { processWorkflowMessage, startWorkflowExecution } from '@/lib/automation/workflow-executor'
 import { z } from 'zod'
 
 // Validation schema for the request
@@ -83,6 +84,9 @@ export async function POST(request: NextRequest) {
         .single()
 
       conversation = newConv
+
+      // Start workflow execution for new conversation
+      await startWorkflowExecution(business_id, conversation.id)
     }
 
     // Check if conversation is in human mode
@@ -112,25 +116,64 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, mode: 'human', auto_responded: false })
     }
 
-    // AI mode - process with AI
-    const aiResponse = await processMessageWithAI(
-      business_id,
-      conversation.id,
-      message,
-      conversation.current_state as any
-    )
+    // Check if there's an active workflow for this business
+    const { data: activeWorkflow } = await supabaseAdmin
+      .from('automation_workflows')
+      .select('id')
+      .eq('business_id', business_id)
+      .eq('is_active', true)
+      .single()
+
+    let responseMessage = ''
+    let useWorkflow = false
+
+    if (activeWorkflow) {
+      // Use workflow execution
+      useWorkflow = true
+      console.log('🤖 Using workflow execution for conversation:', conversation.id)
+
+      const workflowResult = await processWorkflowMessage(conversation.id, message)
+
+      if (workflowResult.responseMessage) {
+        responseMessage = workflowResult.responseMessage
+      } else if (workflowResult.shouldUseAI) {
+        // Workflow says to use AI for this step
+        const aiResponse = await processMessageWithAI(
+          business_id,
+          conversation.id,
+          message,
+          conversation.current_state as any
+        )
+        responseMessage = aiResponse.message
+      } else {
+        // Workflow handled everything, no response needed
+        return NextResponse.json({
+          success: true,
+          mode: 'workflow',
+          auto_responded: true,
+        })
+      }
+    } else {
+      // No active workflow - use traditional AI mode
+      const aiResponse = await processMessageWithAI(
+        business_id,
+        conversation.id,
+        message,
+        conversation.current_state as any
+      )
+      responseMessage = aiResponse.message
+    }
 
     // Update conversation
     const updatedHistory = [
       ...(conversation.message_history || []).slice(-20),
       { role: 'user', content: message, timestamp: new Date().toISOString() },
-      { role: 'assistant', content: aiResponse.message, timestamp: new Date().toISOString() },
+      { role: 'assistant', content: responseMessage, timestamp: new Date().toISOString() },
     ]
 
     await supabaseAdmin
       .from('conversations')
       .update({
-        current_state: aiResponse.newState,
         message_history: updatedHistory,
         last_message_at: new Date().toISOString(),
       })
@@ -146,50 +189,23 @@ export async function POST(request: NextRequest) {
       media_url,
     })
 
-    // Save AI response
+    // Save AI/Workflow response
     await supabaseAdmin.from('messages').insert({
       conversation_id: conversation.id,
       business_id,
       sender_type: 'agent',
-      sender_name: 'AI Assistant',
-      content: aiResponse.message,
+      sender_name: useWorkflow ? 'Workflow Bot' : 'AI Assistant',
+      content: responseMessage,
       message_type: 'text',
     })
 
-    // Send AI response via WhatsApp
-    await sendWhatsAppMessage(business_id, phone, aiResponse.message)
-
-    // Handle actions
-    if (aiResponse.actions?.createBooking && typeof aiResponse.actions.createBooking === 'object') {
-      const booking = aiResponse.actions.createBooking as any
-      if (booking.service_id) {
-        await supabaseAdmin.from('bookings').insert({
-          business_id,
-          customer_phone: phone,
-          service_id: booking.service_id,
-          scheduled_at: booking.scheduled_at || new Date().toISOString(),
-          status: 'pending',
-          payment_status: 'pending',
-          booking_source: 'whatsapp_ai'
-        })
-        console.log('✅ Booking created for conversation', conversation.id)
-      }
-    }
-
-    if (aiResponse.actions?.requestPayment && typeof aiResponse.actions.requestPayment === 'object') {
-      const payment = aiResponse.actions.requestPayment as any
-      if (payment.service_id) {
-        const paymentLink = `${process.env.NEXT_PUBLIC_BASE_URL}/payment?service=${payment.service_id}&phone=${encodeURIComponent(phone)}`
-        await sendWhatsAppMessage(business_id, phone, `💳 Payment link: ${paymentLink}`)
-        console.log('✅ Payment link sent for conversation', conversation.id)
-      }
-    }
+    // Send response via WhatsApp
+    await sendWhatsAppMessage(business_id, phone, responseMessage)
 
     return NextResponse.json({
       success: true,
-      mode: 'ai',
+      mode: useWorkflow ? 'workflow' : 'ai',
       auto_responded: true,
-      new_state: aiResponse.newState,
     })
   } catch (error: any) {
     console.error('AI processing error:', error)

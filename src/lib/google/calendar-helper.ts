@@ -137,9 +137,9 @@ export async function createCalendarEvent(
 
     return {
       success: true,
-      eventId: response.data.id,
-      meetLink: response.data.hangoutLink,
-      htmlLink: response.data.htmlLink,
+      eventId: response.data.id || undefined,
+      meetLink: response.data.hangoutLink || undefined,
+      htmlLink: response.data.htmlLink || undefined,
     }
   } catch (error) {
     console.error('Error creating calendar event:', error)
