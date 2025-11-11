@@ -70,60 +70,130 @@ export async function processMessageWithAI(
     throw new Error('Conversation not found')
   }
 
-  // Load AI instructions (configured in dashboard)
-  const { data: aiInstructions } = await supabaseAdmin
-    .from('ai_instructions')
-    .select('*')
-    .eq('business_id', businessId)
-    .single()
+  // Load ALL business data for comprehensive AI context
+  const [aiInstructions, services, knowledgeBase, employees, templates] = await Promise.all([
+    // AI Instructions
+    supabaseAdmin
+      .from('ai_instructions')
+      .select('*')
+      .eq('business_id', businessId)
+      .single()
+      .then((r: any) => r.data),
 
-  // Load services for this business
-  const { data: services } = await supabaseAdmin
-    .from('services')
-    .select('*')
-    .eq('business_id', businessId)
-    .eq('is_active', true)
-    .order('sort_order')
+    // Services
+    supabaseAdmin
+      .from('services')
+      .select('*')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .order('sort_order')
+      .then((r: any) => r.data || []),
 
-  // Load knowledge base content
-  const { data: knowledgeBase } = await supabaseAdmin
-    .from('knowledge_base_content')
-    .select('source_url, title, content')
-    .eq('business_id', businessId)
-    .eq('is_active', true)
-    .limit(20)
+    // Knowledge Base (website content)
+    supabaseAdmin
+      .from('knowledge_base_content')
+      .select('source_url, title, content')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .limit(20)
+      .then((r: any) => r.data || []),
 
-  // Build knowledge base context
-  let knowledgeContext = ''
-  if (knowledgeBase && knowledgeBase.length > 0) {
-    knowledgeContext = '\n\n## Business Knowledge Base (from website):\n' +
-      knowledgeBase.map((kb: any) =>
-        `### ${kb.title}\nSource: ${kb.source_url}\n${kb.content.substring(0, 3000)}`
-      ).join('\n\n---\n\n')
+    // Employees
+    supabaseAdmin
+      .from('employees')
+      .select('full_name, role, email, phone')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .limit(10)
+      .then((r: any) => r.data || []),
+
+    // Canned Responses/Templates
+    supabaseAdmin
+      .from('canned_responses')
+      .select('name, content, category')
+      .eq('business_id', businessId)
+      .eq('is_active', true)
+      .limit(20)
+      .then((r: any) => r.data || [])
+  ])
+
+  // Build comprehensive business context
+  let businessContext = `\n\n## BUSINESS INFORMATION:\n`
+  businessContext += `**Business Name:** ${business.name}\n`
+  if (business.description) businessContext += `**Description:** ${business.description}\n`
+  if (business.industry) businessContext += `**Industry:** ${business.industry}\n`
+  if (business.website_url) businessContext += `**Website:** ${business.website_url}\n`
+  if (business.support_email) businessContext += `**Email:** ${business.support_email}\n`
+  if (business.support_phone) businessContext += `**Phone:** ${business.support_phone}\n`
+  if (business.whatsapp_number) businessContext += `**WhatsApp:** ${business.whatsapp_number}\n`
+  if (business.language_primary) businessContext += `**Primary Language:** ${business.language_primary}\n`
+  if (business.language_secondary) businessContext += `**Secondary Language:** ${business.language_secondary}\n`
+  if (business.timezone) businessContext += `**Timezone:** ${business.timezone}\n`
+  if (business.currency) businessContext += `**Currency:** ${business.currency}\n`
+
+  // Business hours
+  if (business.business_hours_start && business.business_hours_end) {
+    businessContext += `**Business Hours:** ${business.business_hours_start} - ${business.business_hours_end}\n`
+  }
+  if (business.days_open) {
+    businessContext += `**Days Open:** ${business.days_open}\n`
   }
 
-  // Build services list
+  // Services list
   let servicesContext = ''
-  if (services && services.length > 0) {
-    servicesContext = '\n\n## Available Services:\n' +
-      services.map((s: any, i: number) =>
-        `${i + 1}. **${s.name_english}** (${s.name_arabic})\n   - Price: $${s.price}\n   - Duration: ${s.duration_minutes} minutes\n   - ${s.description_english || ''}`
-      ).join('\n')
+  if (services.length > 0) {
+    servicesContext = '\n\n## AVAILABLE SERVICES:\n'
+    services.forEach((s: any, i: number) => {
+      servicesContext += `${i + 1}. **${s.name_english}**`
+      if (s.name_arabic) servicesContext += ` (${s.name_arabic})`
+      servicesContext += `\n   - Price: ${business.currency || '$'}${s.price}`
+      if (s.duration_minutes) servicesContext += `\n   - Duration: ${s.duration_minutes} minutes`
+      if (s.description_english) servicesContext += `\n   - ${s.description_english}`
+      if (s.category) servicesContext += `\n   - Category: ${s.category}`
+      servicesContext += '\n'
+    })
   }
 
-  // Build system prompt with AI instructions + knowledge base + services
+  // Knowledge base from website
+  let knowledgeContext = ''
+  if (knowledgeBase.length > 0) {
+    knowledgeContext = '\n\n## KNOWLEDGE BASE (from website):\n'
+    knowledgeBase.forEach((kb: any) => {
+      knowledgeContext += `### ${kb.title}\nSource: ${kb.source_url}\n${kb.content.substring(0, 3000)}\n\n---\n\n`
+    })
+  }
+
+  // Team information
+  let teamContext = ''
+  if (employees.length > 0) {
+    teamContext = '\n\n## TEAM MEMBERS:\n'
+    employees.forEach((emp: any) => {
+      teamContext += `- ${emp.full_name} (${emp.role})\n`
+    })
+  }
+
+  // Templates/FAQs
+  let templatesContext = ''
+  if (templates.length > 0) {
+    templatesContext = '\n\n## COMMON RESPONSES:\n'
+    templates.forEach((t: any) => {
+      templatesContext += `**${t.name}** (${t.category}):\n${t.content}\n\n`
+    })
+  }
+
+  // Build final system prompt
   let systemPrompt = ''
 
   if (aiInstructions?.system_prompt) {
-    // Use configured AI instructions
-    systemPrompt = aiInstructions.system_prompt
+    // Use configured AI instructions - replace placeholder
+    systemPrompt = aiInstructions.system_prompt.replace('{business_name}', business.name)
   } else {
     // Fallback to default
-    systemPrompt = getDefaultPrompt(currentState, business, services || [])
+    systemPrompt = getDefaultPrompt(currentState, business, services)
   }
 
-  // Add knowledge base and services to the system prompt
-  systemPrompt = systemPrompt + knowledgeContext + servicesContext
+  // Add all context to the system prompt
+  systemPrompt = systemPrompt + businessContext + servicesContext + knowledgeContext + teamContext + templatesContext
 
   // Build conversation history for context
   const messageHistory = conversation.message_history || []
@@ -133,8 +203,10 @@ export async function processMessageWithAI(
   let aiMessage = ''
 
   if (currentState === 'GREETING' && aiInstructions?.greeting_template && recentHistory.length === 0) {
-    // First message - use configured greeting
+    // First message - use configured greeting with business name
     aiMessage = aiInstructions.greeting_template
+      .replace('{business_name}', business.name)
+      .replace('{name}', business.name)
   } else {
     // Build messages for OpenAI
     const messages: any[] = [
