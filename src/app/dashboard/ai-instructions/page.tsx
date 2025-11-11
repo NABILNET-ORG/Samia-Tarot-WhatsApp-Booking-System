@@ -38,11 +38,14 @@ export default function AIInstructionsPage() {
   const [settings, setSettings] = useState<any>({})
   const [knowledgeUrls, setKnowledgeUrls] = useState<string[]>([])
   const [newUrl, setNewUrl] = useState('')
+  const [fetchedKnowledge, setFetchedKnowledge] = useState<any[]>([])
+  const [showKnowledgeDetails, setShowKnowledgeDetails] = useState(false)
 
   useEffect(() => {
     if (business?.id) {
       loadInstructions()
       loadSettings()
+      loadFetchedKnowledge()
     }
   }, [business?.id])
 
@@ -78,6 +81,18 @@ export default function AIInstructionsPage() {
     }
   }
 
+  async function loadFetchedKnowledge() {
+    try {
+      const response = await fetch('/api/knowledge-base/list')
+      const data = await response.json()
+      if (data.knowledge) {
+        setFetchedKnowledge(data.knowledge)
+      }
+    } catch (error) {
+      console.error('Failed to load fetched knowledge:', error)
+    }
+  }
+
   function addKnowledgeUrl() {
     if (newUrl && knowledgeUrls.length < 20) {
       try {
@@ -109,6 +124,8 @@ export default function AIInstructionsPage() {
       })
       if (response.ok) {
         toast.success('Knowledge base refreshed successfully')
+        // Reload fetched knowledge to show updated data
+        await loadFetchedKnowledge()
       } else {
         toast.error('Failed to refresh knowledge base')
       }
@@ -490,19 +507,109 @@ export default function AIInstructionsPage() {
                 )}
 
                 {knowledgeUrls.length > 0 && (
-                  <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-blue-900">{knowledgeUrls.length} / 20 websites added</p>
-                      <p className="text-xs text-blue-700">Click "Refresh Knowledge" to fetch latest content from websites</p>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">{knowledgeUrls.length} / 20 websites added</p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">Click "Refresh Knowledge" to fetch latest content from websites</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={refreshKnowledgeBase}
+                        disabled={saving}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
+                      >
+                        {saving ? 'Fetching...' : 'Refresh Knowledge'}
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={refreshKnowledgeBase}
-                      disabled={saving}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm"
-                    >
-                      {saving ? 'Fetching...' : 'Refresh Knowledge'}
-                    </button>
+
+                    {/* Fetched Knowledge Display */}
+                    {fetchedKnowledge.length > 0 && (
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setShowKnowledgeDetails(!showKnowledgeDetails)}
+                          className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div className="text-left">
+                              <h3 className="font-medium text-gray-900 dark:text-white">Fetched Knowledge ({fetchedKnowledge.length})</h3>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">AI is using this content to answer questions</p>
+                            </div>
+                          </div>
+                          <svg
+                            className={`h-5 w-5 text-gray-500 transition-transform ${showKnowledgeDetails ? 'rotate-180' : ''}`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+
+                        {showKnowledgeDetails && (
+                          <div className="p-4 space-y-3 max-h-96 overflow-y-auto bg-white dark:bg-gray-900">
+                            {fetchedKnowledge.map((kb: any, index: number) => (
+                              <div key={kb.id || index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium text-gray-900 dark:text-white truncate">{kb.title}</h4>
+                                    <a
+                                      href={kb.source_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-blue-600 hover:underline truncate block"
+                                    >
+                                      {kb.source_url}
+                                    </a>
+                                  </div>
+                                  {kb.is_active ? (
+                                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full whitespace-nowrap">
+                                      Active
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-xs rounded-full whitespace-nowrap">
+                                      Error
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                  <div>
+                                    <span className="font-medium">Characters:</span> {kb.content?.length || 0}
+                                  </div>
+                                  <div>
+                                    <span className="font-medium">Last updated:</span>{' '}
+                                    {kb.last_updated ? new Date(kb.last_updated).toLocaleDateString() : 'Never'}
+                                  </div>
+                                </div>
+
+                                {kb.fetch_error && (
+                                  <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-300">
+                                    <span className="font-medium">Error:</span> {kb.fetch_error}
+                                  </div>
+                                )}
+
+                                {kb.content && kb.is_active && (
+                                  <details className="mt-2">
+                                    <summary className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-900 dark:hover:text-gray-200">
+                                      View content preview
+                                    </summary>
+                                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded text-xs text-gray-700 dark:text-gray-300 max-h-40 overflow-y-auto font-mono whitespace-pre-wrap">
+                                      {kb.content.substring(0, 500)}
+                                      {kb.content.length > 500 && '...'}
+                                    </div>
+                                  </details>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
