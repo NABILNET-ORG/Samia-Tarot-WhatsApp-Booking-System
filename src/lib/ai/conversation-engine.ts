@@ -70,8 +70,8 @@ export async function processMessageWithAI(
     throw new Error('Conversation not found')
   }
 
-  // Load ALL business data for comprehensive AI context
-  const [aiInstructions, services, knowledgeBase, employees, templates] = await Promise.all([
+  // Load ALL business data for comprehensive AI context - EVERYTHING from the app!
+  const [aiInstructions, services, knowledgeBase, employees, templates, activeBookings, recentCustomers] = await Promise.all([
     // AI Instructions
     supabaseAdmin
       .from('ai_instructions')
@@ -115,29 +115,71 @@ export async function processMessageWithAI(
       .eq('business_id', businessId)
       .eq('is_active', true)
       .limit(5)
+      .then((r: any) => r.data || []),
+
+    // Active Bookings (today and upcoming)
+    supabaseAdmin
+      .from('bookings')
+      .select('scheduled_date, status')
+      .eq('business_id', businessId)
+      .gte('scheduled_date', new Date().toISOString())
+      .in('status', ['pending', 'confirmed'])
+      .limit(10)
+      .then((r: any) => r.data || []),
+
+    // Recent Customers (for context about customer base)
+    supabaseAdmin
+      .from('customers')
+      .select('phone, name_english, vip_status, total_bookings')
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false })
+      .limit(5)
       .then((r: any) => r.data || [])
   ])
 
-  // Build comprehensive business context
-  let businessContext = `\n\n## BUSINESS INFORMATION:\n`
-  businessContext += `**Business Name:** ${business.name}\n`
-  if (business.description) businessContext += `**Description:** ${business.description}\n`
-  if (business.industry) businessContext += `**Industry:** ${business.industry}\n`
-  if (business.website_url) businessContext += `**Website:** ${business.website_url}\n`
-  if (business.support_email) businessContext += `**Email:** ${business.support_email}\n`
-  if (business.support_phone) businessContext += `**Phone:** ${business.support_phone}\n`
-  if (business.whatsapp_number) businessContext += `**WhatsApp:** ${business.whatsapp_number}\n`
-  if (business.language_primary) businessContext += `**Primary Language:** ${business.language_primary}\n`
-  if (business.language_secondary) businessContext += `**Secondary Language:** ${business.language_secondary}\n`
-  if (business.timezone) businessContext += `**Timezone:** ${business.timezone}\n`
-  if (business.currency) businessContext += `**Currency:** ${business.currency}\n`
+  // === BUILD COMPREHENSIVE BUSINESS CONTEXT - EVERYTHING! ===
+  let businessContext = `\n\n## ABOUT ${business.name.toUpperCase()}:\n`
 
-  // Business hours
+  // Core business info
+  if (business.description) businessContext += `${business.description}\n\n`
+  businessContext += `**Industry:** ${business.industry || 'Service Provider'}\n`
+
+  // Contact information
+  businessContext += `\n**CONTACT US:**\n`
+  if (business.website_url) businessContext += `- Website: ${business.website_url}\n`
+  if (business.support_email) businessContext += `- Email: ${business.support_email}\n`
+  if (business.support_phone) businessContext += `- Phone: ${business.support_phone}\n`
+  if (business.whatsapp_number) businessContext += `- WhatsApp: ${business.whatsapp_number}\n`
+
+  // Operating hours
   if (business.business_hours_start && business.business_hours_end) {
-    businessContext += `**Business Hours:** ${business.business_hours_start} - ${business.business_hours_end}\n`
+    businessContext += `\n**BUSINESS HOURS:**\n`
+    businessContext += `${business.business_hours_start} - ${business.business_hours_end}\n`
+    if (business.days_open) businessContext += `Days: ${business.days_open}\n`
   }
-  if (business.days_open) {
-    businessContext += `**Days Open:** ${business.days_open}\n`
+
+  // Language & Location
+  if (business.language_primary || business.timezone) {
+    businessContext += `\n**LANGUAGES & LOCATION:**\n`
+    if (business.language_primary) businessContext += `- Primary Language: ${business.language_primary}\n`
+    if (business.language_secondary) businessContext += `- Also Available: ${business.language_secondary}\n`
+    if (business.timezone) businessContext += `- Timezone: ${business.timezone}\n`
+  }
+
+  // Payment & Booking Policies
+  businessContext += `\n**PAYMENT & BOOKING:**\n`
+  if (business.currency) businessContext += `- Currency: ${business.currency}\n`
+  if (business.stripe_publishable_key) businessContext += `- Payment Methods: Credit/Debit Card (Stripe), Western Union\n`
+  else businessContext += `- Payment Methods: Western Union, Bank Transfer\n`
+
+  // Add subscription/tier info (to know service limitations)
+  if (business.subscription_tier) {
+    businessContext += `- Service Tier: ${business.subscription_tier}\n`
+  }
+
+  // Booking availability info
+  if (activeBookings && activeBookings.length > 0) {
+    businessContext += `- Upcoming Bookings: ${activeBookings.length} sessions scheduled\n`
   }
 
   // Services list
@@ -177,27 +219,75 @@ export async function processMessageWithAI(
   // Templates/FAQs - Keep short summaries only
   let templatesContext = ''
   if (templates.length > 0) {
-    templatesContext = '\n\n## COMMON RESPONSES:\n'
+    templatesContext = '\n\n## COMMON RESPONSES & FAQs:\n'
     templates.forEach((t: any) => {
-      // Limit each template to 200 chars
-      const shortContent = t.content.substring(0, 200) + (t.content.length > 200 ? '...' : '')
-      templatesContext += `**${t.name}**: ${shortContent}\n`
+      // Limit each template to 150 chars to save tokens
+      const shortContent = t.content.substring(0, 150) + (t.content.length > 150 ? '...' : '')
+      templatesContext += `**${t.name}** (${t.category}): ${shortContent}\n`
     })
   }
 
-  // Build final system prompt
+  // Customer insights
+  let customerContext = ''
+  if (recentCustomers && recentCustomers.length > 0) {
+    const totalCustomers = recentCustomers.length
+    const vipCount = recentCustomers.filter((c: any) => c.vip_status).length
+    customerContext += `\n**CUSTOMER BASE:**\n`
+    customerContext += `- Total Customers: ${totalCustomers}+ registered\n`
+    if (vipCount > 0) customerContext += `- VIP Customers: ${vipCount}\n`
+  }
+
+  // Booking availability
+  let bookingContext = ''
+  if (activeBookings && activeBookings.length > 0) {
+    bookingContext += `\n**BOOKING AVAILABILITY:**\n`
+    bookingContext += `- Upcoming bookings: ${activeBookings.length} sessions scheduled\n`
+    bookingContext += `- Recommendation: Check calendar for available slots\n`
+  } else {
+    bookingContext += `\n**BOOKING AVAILABILITY:**\n`
+    bookingContext += `- Currently accepting bookings\n`
+    bookingContext += `- Flexible scheduling available\n`
+  }
+
+  // Build final system prompt - ASSEMBLE EVERYTHING!
   let systemPrompt = ''
 
   if (aiInstructions?.system_prompt) {
-    // Use configured AI instructions - replace placeholder
-    systemPrompt = aiInstructions.system_prompt.replace('{business_name}', business.name)
+    // Use configured AI instructions - replace ALL placeholders
+    systemPrompt = aiInstructions.system_prompt
+      .replace(/{business_name}/g, business.name)
+      .replace(/{name}/g, business.name)
+      .replace(/{industry}/g, business.industry || '')
   } else {
-    // Fallback to default
-    systemPrompt = getDefaultPrompt(currentState, business, services)
+    // Fallback to auto-generated prompt based on business data
+    systemPrompt = `You are an AI assistant for ${business.name}.
+You help customers with their inquiries and bookings.
+
+**YOUR ROLE:**
+- Answer customer questions clearly and professionally
+- Guide customers through the booking/purchase process
+- Provide accurate information about products/services
+- Maintain a helpful and ${aiInstructions?.tone || 'friendly'} tone
+
+**RULES:**
+1. Always be polite and professional
+2. Stay on topic related to business services
+3. Ask for clarification if customer request is unclear
+4. Escalate complex issues to human support
+5. Remember conversation context
+6. Never answer or reply anything not related to the business`
   }
 
-  // Add all context to the system prompt
-  systemPrompt = systemPrompt + businessContext + servicesContext + knowledgeContext + teamContext + templatesContext
+  // === ASSEMBLE COMPLETE CONTEXT ===
+  // Order of priority: Instructions → Business Info → Services → Knowledge → Team → FAQs → Bookings → Customers
+  systemPrompt = systemPrompt +
+    businessContext +
+    servicesContext +
+    knowledgeContext +
+    teamContext +
+    templatesContext +
+    customerContext +
+    bookingContext
 
   // Build conversation history for context
   const messageHistory = conversation.message_history || []
